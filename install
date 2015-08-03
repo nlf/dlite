@@ -1,0 +1,101 @@
+#!/bin/bash
+
+setup_nfs() {
+    echo -n "creating nfs export.."
+    local vmnet="/Library/Preferences/SystemConfiguration/com.apple.vmnet"
+    local addr=$(defaults read ${vmnet} Shared_Net_Address)
+    local mask=$(defaults read ${vmnet} Shared_Net_Mask)
+
+    function ip2num() {
+      local IFS=.
+      local ip=($1)
+      printf "%s\n" $(( (${ip[0]} << 24) | (${ip[1]} << 16) | (${ip[2]} << 8) | ${ip[3]} ))
+    }
+
+    function num2ip() {
+      local n=$1
+      printf "%d.%d.%d.%d\n" \
+        $(( $n >> 24 )) $(( ($n >> 16) & 0xFF )) $(( ($n >> 8) & 0xFF )) $(( $n & 0xFF ))
+    }
+
+    local num=$(( $(ip2num ${addr}) & $(ip2num ${mask}) ))
+    local net=$(num2ip ${num})
+
+    local exports="/Users -network ${net} -mask ${mask} -alldirs -mapall=$(id -u $SUDO_USER):$(id -g $SUDO_USER)"
+
+    touch /etc/exports
+    grep -q "$exports" /etc/exports
+    if [ $? -ne 0 ]; then
+        echo "$exports" >> /etc/exports
+        nfsd restart >/dev/null 2>&1
+    fi
+    echo "done"
+}
+
+create_disk() {
+    echo -n "creating storage disk.."
+    local tempdir=$(mktemp -d -t dlite)
+    if [ -e "$HOME/.ssh/id_rsa.pub" ]; then
+        mkdir -p "$tempdir/.ssh"
+        cp "$HOME/.ssh/id_rsa.pub" "$tempdir/.ssh/authorized_keys"
+    elif [ -e "$HOME/.ssh/id_dsa.pub" ]; then
+        mkdir -p "$tempdir/.ssh"
+        cp "$HOME/.ssh/id_dsa.pub" "$tempdir/.ssh/authorized_keys"
+    else
+        echo "no ssh key found for user $SUDO_USER, please create one and try again"
+        exit 1
+    fi
+    echo "dhyve, please format-me" > "$tempdir/dhyve, please format-me"
+    mkdir -p /var/db/dlite
+    tar cf "/var/db/dlite/disk.img" --directory="$tempdir" "dhyve, please format-me" ".ssh/authorized_keys"
+    rm -rf "$tempdir"
+    : ${DISKSIZE:=30}
+    dd if=/dev/zero bs=1g count=$DISKSIZE >> "/var/db/dlite/disk.img" 2>/dev/null
+    echo "done"
+}
+
+brew_install() {
+    if [ -z "$(which brew)" ]; then
+        echo "xhyve is required, but homebrew is missing. please either install homebrew http://brew.sh or install xhyve manually"
+        exit 1
+    fi
+
+    local app=$1
+    echo "installing $app with homebrew.."
+    su "$SUDO_USER" -c 'brew update'
+    su "$SUDO_USER" -c "brew install $app"
+}
+
+download_dhyveos() {
+    echo -n "downloading os image.."
+    local args
+    if [ -n "$HOMEBREW_GITHUB_API_TOKEN" ]; then
+        args="-H \"Authorization: token $HOMEBREW_GITHUB_API_TOKEN\""
+    fi
+    local version=$(curl -s "$args" https://api.github.com/repos/nlf/dhyve-os/releases/latest | awk -F'"' '/tag_name/ { print $4 }')
+    if [ -z "$version" ]; then
+        echo "failed to retrieve latest version information for dhyve-os"
+        exit 1
+    fi
+
+    mkdir -p /usr/share/dlite
+    curl -Lso "/usr/share/dlite/bzImage" "https://github.com/nlf/dhyve-os/releases/download/$version/bzImage"
+    curl -Lso "/usr/share/dlite/rootfs.cpio.xz" "https://github.com/nlf/dhyve-os/releases/download/$version/rootfs.cpio.xz"
+    echo "done"
+}
+
+if [ "$USER" != "root" ]; then
+    sudo "$0"
+    exit $?
+fi
+
+[ -z "$(which xhyve)" ] && brew_install xhyve
+[ -z "$(which socat)" ] && brew_install socat
+download_dhyveos
+[ ! -e "/var/db/dlite/disk.img" ] && create_disk
+[ ! -e "/etc/dlite.conf" ] && echo "DLITE_UUID=$(uuidgen)" > /etc/dlite.conf
+setup_nfs
+install -CSv dlite /usr/bin
+launchctl unload /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
+install -CSv local.dlite.plist /Library/LaunchDaemons
+launchctl load /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1

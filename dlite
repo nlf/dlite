@@ -1,0 +1,60 @@
+#!/bin/bash
+
+. /etc/dlite.conf
+: ${DLITE_CPUS:=1}
+: ${DLITE_MEM:=1G}
+
+get_ip() {
+    awk '
+    {
+      if ($1 ~ /^name/) {
+        name=substr($1, 6)
+      }
+      if ($1 ~ /^ip_address/) {
+        ip_address=substr($1, 12)
+      }
+      if (name != "" && ip_address != "") {
+        ip_addresses[name]=ip_address
+        name=ip_address=""
+      }
+    }
+    END {
+        print ip_addresses["'$DLITE_UUID'"]
+    }
+    ' /var/db/dhcpd_leases
+}
+
+/usr/local/bin/xhyve -A -c $DLITE_CPUS -m $DLITE_MEM -s 0:0,hostbridge -l com1,stdio -s 31,lpc -s 2:0,virtio-net -s 4,virtio-blk,/var/db/dlite/disk.img -U $DLITE_UUID -f kexec,/usr/share/dlite/bzImage,/usr/share/dlite/rootfs.cpio.xz,"console=ttyS0 hostname=dlite uuid=$DLITE_UUID" >/var/log/dlite.log 2>&1 &
+XHYVE_PID=$!
+
+until get_ip >/dev/null; do
+    sleep 1
+done
+
+IP=$(get_ip)
+echo "$IP local.docker # created by dlite" >> /etc/hosts
+/usr/local/bin/socat unix-listen:/var/run/docker.sock,fork tcp:${IP}:2375 &
+SOCAT_PID=$!
+until [ -e "/var/run/docker.sock" ]; do
+    sleep 1
+done
+
+chmod a+w /var/run/docker.sock
+
+cleanup() {
+    kill $XHYVE_PID >/dev/null 2>&1
+    while ps $XHYVE_PID >/dev/null 2>&1; do
+        sleep 1
+    done
+
+    kill -9 $SOCAT_PID >/dev/null 2>&1
+    rm -f /var/run/docker.sock
+    sed -i '' '/.*# created by dlite/d' /etc/hosts
+}
+
+trap cleanup EXIT
+
+# keep us running
+while true; do
+    sleep 30
+done
