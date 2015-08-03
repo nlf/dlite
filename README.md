@@ -35,7 +35,8 @@ After making your changes:
 
 ```
 sudo launchctl stop local.dlite
-# I would recommend checking the output of `ps aux | grep xhyve` here and wait until the virtual machine has actually stopped
+# I would recommend checking the output of `ps aux | grep xhyve` here
+# and wait until the virtual machine has actually stopped
 sudo launchctl start local.dlite
 ```
 
