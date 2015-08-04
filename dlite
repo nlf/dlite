@@ -33,7 +33,7 @@ done
 
 IP=$(get_ip)
 echo "$IP local.docker # created by dlite" >> /etc/hosts
-/usr/local/bin/socat unix-listen:/var/run/docker.sock,fork tcp:${IP}:2375 &
+/usr/local/bin/socat unix-listen:/var/run/docker.sock,fork,reuseaddr,ignoreeof tcp:${IP}:2375 &
 SOCAT_PID=$!
 until [ -e "/var/run/docker.sock" ]; do
     sleep 1
