@@ -33,13 +33,11 @@ done
 
 IP=$(get_ip)
 echo "$IP local.docker # created by dlite" >> /etc/hosts
-/usr/local/bin/socat unix-listen:/var/run/docker.sock,fork,reuseaddr,ignoreeof tcp:${IP}:2375 &
+/usr/local/bin/socat -t60 unix-listen:/var/run/docker.sock,mode=777,reuseaddr,fork tcp:192.168.64.4:2375,keepalive,end-close &
 SOCAT_PID=$!
 until [ -e "/var/run/docker.sock" ]; do
     sleep 1
 done
-
-chmod a+w /var/run/docker.sock
 
 cleanup() {
     kill $XHYVE_PID >/dev/null 2>&1
