@@ -47,3 +47,5 @@ DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OS
 DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
 
 DLite is most definitely *not* recommended for any kind of production use.
+
+Odds are you'll notice a lot of `socat` processes running. That's normal. Because Docker sometimes sends EOF bytes the timeout in socat is set to 60 seconds. Unused child processes will close on their own within a minute of when data stops moving through them.
