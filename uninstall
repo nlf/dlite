@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ "$USER" != "root" ]; then
+    sudo "$0"
+    exit $?
+fi
+
+echo -n "removing launchd daemon.."
+launchctl stop local.dlite >/dev/null 2>&1
+launchctl unload /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
+rm -f /Library/LaunchDaemons/local.dlite.plist
+echo "done"
+
+echo -n "removing vm.."
+rm -rf /usr/share/dlite
+echo "done"
+
+echo -n "removing disk image.."
+rm -rf /var/db/dlite
+echo "done"
+
+echo -n "removing dlite.."
+rm -f /usr/bin/dlite
+echo "done"
