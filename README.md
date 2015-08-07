@@ -48,4 +48,4 @@ DLite is *not* secured via TLS. If that's important to you for local development
 
 DLite is most definitely *not* recommended for any kind of production use.
 
-Odds are you'll notice a lot of `socat` processes running. That's normal. Because Docker sometimes sends EOF bytes the timeout in socat is set to 60 seconds. Unused child processes will close on their own within a minute of when data stops moving through them.
+Odds are you'll notice a lot of `socat` processes running. That's normal. Because Docker sometimes sends EOF bytes the timeout in socat is set to 600 seconds. Unused child processes will close on their own within ten minutes of when data stops moving through them.
