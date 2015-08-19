@@ -12,7 +12,7 @@ rm -f /Library/LaunchDaemons/local.dlite.plist
 echo "done"
 
 echo -n "removing vm.."
-rm -rf /usr/share/dlite
+rm -rf /usr/local/share/dlite
 echo "done"
 
 echo -n "removing disk image.."
@@ -20,5 +20,5 @@ rm -rf /var/db/dlite
 echo "done"
 
 echo -n "removing dlite.."
-rm -f /usr/bin/dlite
+rm -f /usr/local/bin/dlite
 echo "done"

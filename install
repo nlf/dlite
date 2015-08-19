@@ -78,9 +78,9 @@ download_dhyveos() {
         exit 1
     fi
 
-    mkdir -p /usr/share/dlite
-    curl -Lso "/usr/share/dlite/bzImage" "https://github.com/nlf/dhyve-os/releases/download/$version/bzImage"
-    curl -Lso "/usr/share/dlite/rootfs.cpio.xz" "https://github.com/nlf/dhyve-os/releases/download/$version/rootfs.cpio.xz"
+    mkdir -p /usr/local/share/dlite
+    curl -Lso "/usr/local/share/dlite/bzImage" "https://github.com/nlf/dhyve-os/releases/download/$version/bzImage"
+    curl -Lso "/usr/local/share/dlite/rootfs.cpio.xz" "https://github.com/nlf/dhyve-os/releases/download/$version/rootfs.cpio.xz"
     echo "done"
 }
 
@@ -95,7 +95,7 @@ download_dhyveos
 [ ! -e "/var/db/dlite/disk.img" ] && create_disk
 [ ! -e "/etc/dlite.conf" ] && echo "DLITE_UUID=$(uuidgen)" > /etc/dlite.conf
 setup_nfs
-install -CSv dlite /usr/bin
+install -CSv dlite /usr/local/bin
 launchctl unload /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
 install -CSv local.dlite.plist /Library/LaunchDaemons
 launchctl load /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
