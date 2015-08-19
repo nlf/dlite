@@ -5,7 +5,7 @@
 	<key>Label</key>
 	<string>local.dlite</string>
 	<key>Program</key>
-	<string>/usr/bin/dlite</string>
+	<string>/usr/local/bin/dlite</string>
 	<key>RunAtLoad</key>
 	<true/>
 </dict>
