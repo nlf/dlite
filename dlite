@@ -1,6 +1,7 @@
 #!/bin/bash
+: ${PREFIX:=/usr/local}
+. "$PREFIX/etc/dlite.conf"
 
-. /etc/dlite.conf
 : ${DLITE_CPUS:=1}
 : ${DLITE_MEM:=1G}
 
@@ -24,16 +25,17 @@ get_ip() {
     ' /var/db/dhcpd_leases
 }
 
-/usr/local/bin/xhyve -A -c $DLITE_CPUS -m $DLITE_MEM -s 0:0,hostbridge -l com1,stdio -s 31,lpc -s 2:0,virtio-net -s 4,virtio-blk,/var/db/dlite/disk.img -U $DLITE_UUID -f kexec,/usr/share/dlite/bzImage,/usr/share/dlite/rootfs.cpio.xz,"console=ttyS0 hostname=dlite uuid=$DLITE_UUID" >/var/log/dlite.log 2>&1 &
+"$XHYVE" -A -c $DLITE_CPUS -m $DLITE_MEM -s 0:0,hostbridge -l com1,stdio -s 31,lpc -s 2:0,virtio-net -s 4,virtio-blk,"$PREFIX/var/db/dlite/disk.img" -U $DLITE_UUID -f kexec,"$PREFIX/usr/share/dlite/bzImage","$PREFIX/usr/share/dlite/rootfs.cpio.xz","console=ttyS0 hostname=dlite uuid=$DLITE_UUID" >/var/log/dlite.log 2>&1 &
 XHYVE_PID=$!
 
-until get_ip >/dev/null; do
+IP=$(get_ip)
+until [ -n "$IP" ]; do
+    IP=$(get_ip)
     sleep 1
 done
 
-IP=$(get_ip)
 echo "$IP local.docker # created by dlite" >> /etc/hosts
-/usr/local/bin/socat -t600 unix-listen:/var/run/docker.sock,mode=777,reuseaddr,fork tcp:$IP:2375,keepalive,end-close &
+"$SOCAT" -t600 unix-listen:/var/run/docker.sock,mode=777,reuseaddr,fork tcp:$IP:2375,keepalive,end-close &
 SOCAT_PID=$!
 until [ -e "/var/run/docker.sock" ]; do
     sleep 1

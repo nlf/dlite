@@ -1,5 +1,7 @@
 #!/bin/bash
 
+: ${PREFIX:=/usr/local}
+
 if [ "$USER" != "root" ]; then
     sudo "$0"
     exit $?
@@ -12,13 +14,17 @@ rm -f /Library/LaunchDaemons/local.dlite.plist
 echo "done"
 
 echo -n "removing vm.."
-rm -rf /usr/share/dlite
+rm -rf "$PREFIX/usr/share/dlite"
 echo "done"
 
 echo -n "removing disk image.."
-rm -rf /var/db/dlite
+rm -rf "$PREFIX/var/db/dlite"
+echo "done"
+
+echo -n "removing configuration.."
+rm -f "$PREFIX/etc/dlite.conf"
 echo "done"
 
 echo -n "removing dlite.."
-rm -f /usr/bin/dlite
+rm -f "$PREFIX/bin/dlite"
 echo "done"

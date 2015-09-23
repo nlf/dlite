@@ -4,8 +4,13 @@
 <dict>
 	<key>Label</key>
 	<string>local.dlite</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PREFIX</key>
+		<string>USER_PREFIX</string>
+	</dict>
 	<key>Program</key>
-	<string>/usr/bin/dlite</string>
+	<string>USER_PREFIX/bin/dlite</string>
 	<key>RunAtLoad</key>
 	<true/>
 </dict>
