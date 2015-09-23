@@ -155,6 +155,7 @@ if [ -z "$socat_path" ]; then
 fi
 
 if [ "$USER" != "root" ]; then
+    echo "this script requires root access, restarting under sudo.. enter your password if prompted to continue"
     sudo "$0" confirmed
     exit $?
 fi
