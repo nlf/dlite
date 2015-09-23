@@ -180,9 +180,9 @@ install -CSv dlite "$PREFIX/bin"
 install -CSv local.dlite.plist /Library/LaunchDaemons
 sed -i.bak "s|USER_PREFIX|$PREFIX|g" /Library/LaunchDaemons/local.dlite.plist
 
+launchctl unload /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
 dlite_pid=$(launchctl list | grep local.dlite | cut -f1)
 if [ -n "$dlite_pid" -a "$dlite_pid" != "-" ]; then
-    launchctl unload /Library/LaunchDaemons/local.dlite.plist >/dev/null 2>&1
     while ps "$dlite_pid"; do
         sleep 0.5
     done
