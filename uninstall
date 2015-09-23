@@ -9,7 +9,7 @@ if [ -z "$PREFIX" ]; then
 fi
 
 if [ "$USER" != "root" ]; then
-    sudo "$0"
+    sudo "PREFIX=$PREFIX" -s "$0"
     exit $?
 fi
 
