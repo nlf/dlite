@@ -1,6 +1,12 @@
 #!/bin/bash
 
-: ${PREFIX:=/usr/local}
+if [ -z "$PREFIX" ]; then
+    if [ -n "$(which brew)" ]; then
+        PREFIX=$(brew --prefix)
+    else
+        PREFIX=/usr/local
+    fi
+fi
 
 if [ "$USER" != "root" ]; then
     sudo "$0"
