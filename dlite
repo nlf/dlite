@@ -25,7 +25,7 @@ get_ip() {
     ' /var/db/dhcpd_leases
 }
 
-"$XHYVE" -A -c $DLITE_CPUS -m $DLITE_MEM -s 0:0,hostbridge -l com1,stdio -s 31,lpc -s 2:0,virtio-net -s 4,virtio-blk,"$PREFIX/var/db/dlite/disk.img" -U $DLITE_UUID -f kexec,"$PREFIX/usr/share/dlite/bzImage","$PREFIX/usr/share/dlite/rootfs.cpio.xz","console=ttyS0 hostname=dlite uuid=$DLITE_UUID" >/var/log/dlite.log 2>&1 &
+"$XHYVE" -A -c $DLITE_CPUS -m $DLITE_MEM -s 0:0,hostbridge -l com1,stdio -s 31,lpc -s 2:0,virtio-net -s 4,virtio-blk,"$PREFIX/var/db/dlite/disk.img" -U $DLITE_UUID -f kexec,"$PREFIX/usr/share/dlite/bzImage","$PREFIX/usr/share/dlite/rootfs.cpio.xz","console=ttyS0 hostname=dlite uuid=$DLITE_UUID" >"$PREFIX/var/log/dlite.log" 2>&1 &
 XHYVE_PID=$!
 
 IP=$(get_ip)
