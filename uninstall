@@ -6,6 +6,9 @@ if [ -z "$PREFIX" ]; then
     else
         PREFIX=/usr/local
     fi
+else
+    PREFIX=$(echo "$PREFIX" | tr -s /)
+    [ "$PREFIX" != "/" ] && PREFIX=${PREFIX%/}
 fi
 
 if [ "$USER" != "root" ]; then
