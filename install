@@ -162,6 +162,7 @@ fi
 
 download_dhyveos
 create_disk
+mkdir -p "$PREFIX/etc"
 echo "DLITE_UUID=$(uuidgen)" > "$PREFIX/etc/dlite.conf"
 echo "DLITE_CPUS=$DLITE_CPUS" >> "$PREFIX/etc/dlite.conf"
 echo "DLITE_MEM=$DLITE_MEM" >> "$PREFIX/etc/dlite.conf"
