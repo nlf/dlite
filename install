@@ -163,7 +163,7 @@ fi
 
 if [ "$USER" != "root" ]; then
     echo "this script requires root access, restarting under sudo.. enter your password if prompted to continue"
-    sudo "$0" confirmed
+    sudo "PREFIX=$PREFIX" "DLITE_CPUS=$DLITE_CPUS" "DLITE_MEM=$DLITE_MEM" "DISKSIZE=$DISKSIZE" -s "$0" confirmed
     exit $?
 fi
 
