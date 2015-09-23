@@ -1,6 +1,13 @@
 #!/bin/bash
 
-: ${PREFIX:=/usr/local}
+if [ -z "$PREFIX" ]; then
+    if [ -n "$(which brew)" ]; then
+        PREFIX=$(brew --prefix)
+    else
+        PREFIX=/usr/local
+    fi
+fi
+
 : ${DLITE_CPUS:=1}
 : ${DLITE_MEM:=1G}
 
