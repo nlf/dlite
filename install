@@ -17,7 +17,7 @@ fi
 setup_nfs() {
     echo -n "creating nfs export.."
     local vmnet="/Library/Preferences/SystemConfiguration/com.apple.vmnet"
-    until [ -e "$vmnet.plist" ]; do
+    until [ -e "${vmnet}.plist" ]; do
         sleep 0.5
     done;
 
