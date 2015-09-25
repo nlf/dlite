@@ -136,6 +136,7 @@ _brew_install() {
         echo "failed to install $app via homebrew, aborting install.."
         exit 1
     fi
+    brew link --overwrite $app
 }
 
 if [ -z "$1" -o "$1" != "confirmed" ]; then
