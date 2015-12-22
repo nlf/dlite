@@ -22,7 +22,7 @@ If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` shou
 
 ##Configuration
 
-The number of CPUs and amount of memory allocated to the virtual machine is configurable. After running the install script, simply edit `/etc/dlite.conf` and you may add lines similar to the following:
+The number of CPUs and amount of memory allocated to the virtual machine is configurable. After running the install script, simply edit `/usr/local/etc/dlite.conf` and you may add lines similar to the following:
 
 ```
 DLITE_CPUS=2
