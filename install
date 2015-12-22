@@ -55,12 +55,12 @@ create_disk() {
 
     local tempdir=$(mktemp -d -t dlite)
 
-    if [ -e "$HOME/.ssh/id_rsa.pub" ]; then
+    if [ -e "$DLITE_HOME/.ssh/id_rsa.pub" ]; then
         mkdir -p "$tempdir/.ssh"
-        cp "$HOME/.ssh/id_rsa.pub" "$tempdir/.ssh/authorized_keys"
-    elif [ -e "$HOME/.ssh/id_dsa.pub" ]; then
+        cp "$DLITE_HOME/.ssh/id_rsa.pub" "$tempdir/.ssh/authorized_keys"
+    elif [ -e "$DLITE_HOME/.ssh/id_dsa.pub" ]; then
         mkdir -p "$tempdir/.ssh"
-        cp "$HOME/.ssh/id_dsa.pub" "$tempdir/.ssh/authorized_keys"
+        cp "$DLITE_HOME/.ssh/id_dsa.pub" "$tempdir/.ssh/authorized_keys"
     else
         echo "no ssh key found for user $SUDO_USER, please create one and try again"
         exit 1
@@ -167,7 +167,7 @@ fi
 
 if [ "$USER" != "root" ]; then
     echo "this script requires root access, restarting under sudo.. enter your password if prompted to continue"
-    sudo "PREFIX=$PREFIX" "DLITE_CPUS=$DLITE_CPUS" "DLITE_MEM=$DLITE_MEM" "DISKSIZE=$DISKSIZE" -s "$0" confirmed
+    sudo "DLITE_HOME=$HOME" "PREFIX=$PREFIX" "DLITE_CPUS=$DLITE_CPUS" "DLITE_MEM=$DLITE_MEM" "DISKSIZE=$DISKSIZE" -s "$0" confirmed
     exit $?
 fi
 
