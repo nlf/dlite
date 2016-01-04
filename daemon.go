@@ -21,7 +21,6 @@ func runXhyve(config Config) {
 	done := make(chan bool)
 	pty := make(chan string)
 	args := []string{
-		"libxhyve_bug",
 		"-A",
 		"-c", fmt.Sprintf("%d", config.CpuCount),
 		"-m", fmt.Sprintf("%dG", config.Memory),
