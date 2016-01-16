@@ -4,7 +4,7 @@ The simplest way to use Docker on OSX.
 
 ##Installation
 
-Download the binary and put it somewhere in your path, then:
+Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, then:
 
 ```
 sudo dlite install
