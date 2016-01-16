@@ -13,7 +13,7 @@ import (
 
 type result struct {
 	value string
-	err error
+	err   error
 }
 
 func GetIP(uuid string) (string, error) {

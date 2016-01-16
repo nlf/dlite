@@ -98,7 +98,7 @@ func CreateDisk(sshKey string, size int) error {
 		return err
 	}
 
-	_, err = f.Seek(int64(size * 1073741824 - 1), 0)
+	_, err = f.Seek(int64(size*1073741824-1), 0)
 	if err != nil {
 		return err
 	}

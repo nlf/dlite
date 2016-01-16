@@ -52,7 +52,7 @@ func Proxy(ip string) error {
 				server.Close()
 			}()
 
-			go func () {
+			go func() {
 				_, err := io.Copy(server, client)
 				if err != nil {
 					return

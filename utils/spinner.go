@@ -7,12 +7,12 @@ import (
 	"github.com/briandowns/spinner"
 )
 
-type wrapped func () error
+type wrapped func() error
 type FunctionMap map[string]wrapped
 
 func Spin(fm FunctionMap) error {
 	for prefix, fn := range fm {
-		s := spinner.New(spinner.CharSets[9], time.Millisecond * 100)
+		s := spinner.New(spinner.CharSets[9], time.Millisecond*100)
 		s.Prefix = fmt.Sprintf("%s: ", prefix)
 		s.Start()
 		err := fn()
