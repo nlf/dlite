@@ -4,14 +4,14 @@ import (
 	"github.com/nlf/dlite/utils"
 )
 
-type RebuildCommand struct{
-	Disk    int    `short:"d" long:"disk" description:"size of disk to create" default:"30"`
-	SSHKey  string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
+type RebuildCommand struct {
+	Disk   int    `short:"d" long:"disk" description:"size of disk to create" default:"30"`
+	SSHKey string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
 }
 
 func (c *RebuildCommand) Execute(args []string) error {
 	fmap := utils.FunctionMap{}
-	fmap["Rebuilding disk image"] = func () error {
+	fmap["Rebuilding disk image"] = func() error {
 		return utils.CreateDisk(c.SSHKey, c.Disk)
 	}
 

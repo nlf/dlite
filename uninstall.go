@@ -4,12 +4,12 @@ import (
 	"github.com/nlf/dlite/utils"
 )
 
-type UninstallCommand struct {}
+type UninstallCommand struct{}
 
 func (c *UninstallCommand) Execute(args []string) error {
 	utils.EnsureSudo()
 	fmap := utils.FunctionMap{}
-	fmap["Removing files"] = func () error {
+	fmap["Removing files"] = func() error {
 		err := utils.RemoveSudoer()
 		if err != nil {
 			return err
@@ -18,7 +18,7 @@ func (c *UninstallCommand) Execute(args []string) error {
 		return utils.RemoveDir()
 	}
 
-	fmap["Removing launchd agent"] = func () error {
+	fmap["Removing launchd agent"] = func() error {
 		return utils.RemoveAgent()
 	}
 

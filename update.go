@@ -4,13 +4,13 @@ import (
 	"github.com/nlf/dlite/utils"
 )
 
-type UpdateCommand struct{
+type UpdateCommand struct {
 	Version string `short:"v" long:"version" description:"version of DhyveOS to install"`
 }
 
 func (c *UpdateCommand) Execute(args []string) error {
 	fmap := utils.FunctionMap{}
-	fmap["Downloading OS"] = func () error {
+	fmap["Downloading OS"] = func() error {
 		if c.Version == "" {
 			latest, err := utils.GetLatestOSVersion()
 			if err != nil {

@@ -21,11 +21,11 @@ func (c *InstallCommand) Execute(args []string) error {
 	}
 
 	fmap := utils.FunctionMap{}
-	fmap["Building disk image"] = func () error {
+	fmap["Building disk image"] = func() error {
 		return utils.CreateDisk(c.SSHKey, c.Disk)
 	}
 
-	fmap["Downloading OS"] = func () error {
+	fmap["Downloading OS"] = func() error {
 		if c.Version == "" {
 			latest, err := utils.GetLatestOSVersion()
 			if err != nil {
@@ -36,12 +36,12 @@ func (c *InstallCommand) Execute(args []string) error {
 		return utils.DownloadOS(c.Version)
 	}
 
-	fmap["Writing configuration"] = func () error {
+	fmap["Writing configuration"] = func() error {
 		uuid := uuid.NewV1().String()
 		return utils.SaveConfig(uuid, c.Cpus, c.Memory)
 	}
 
-	fmap["Creating launchd agent"] = func () error {
+	fmap["Creating launchd agent"] = func() error {
 		err := utils.AddSudoer()
 		if err != nil {
 			return err

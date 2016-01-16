@@ -8,7 +8,7 @@ import (
 
 const VERSION = "1.0.2"
 
-type Options struct {}
+type Options struct{}
 
 var (
 	options Options
