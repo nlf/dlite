@@ -4,13 +4,21 @@ The simplest way to use Docker on OSX.
 
 ##Installation
 
+Download the binary and put it somewhere in your path, then:
+
 ```
-git clone git://github.com/nlf/dlite
-cd dlite
-./install
+sudo dlite install
 ```
 
-Note that installation uses [homebrew](http://brew.sh) for both xhyve and socat. If you don't already use homebrew, you should really install it first. If you don't want to, install xhyve and socat to `/usr/local/bin` yourself.
+See the output of `sudo dlite install --help` for additional options.
+
+This will create the necessary files and a launchd agent to manage the process. After you've installed, run:
+
+```
+launchctl start local.dlite
+```
+
+as your user to start the process. DLite will start automatically upon logging in as well.
 
 ##Usage
 
@@ -20,26 +28,6 @@ When opening ports in your docker containers, connect to `local.docker` instead 
 
 If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` should do the trick.
 
-##Configuration
-
-The number of CPUs and amount of memory allocated to the virtual machine is configurable. After running the install script, simply edit `/usr/local/etc/dlite.conf` and you may add lines similar to the following:
-
-```
-DLITE_CPUS=2
-DLITE_MEM=2G
-```
-
-The default is 1 CPU and 1GB of memory. Do *not* delete or change the `DLITE_UUID` setting in that file.
-
-After making your changes:
-
-```
-sudo launchctl stop local.dlite
-# I would recommend checking the output of `ps aux | grep xhyve` here
-# and wait until the virtual machine has actually stopped
-sudo launchctl start local.dlite
-```
-
 ##Caveats
 
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer.
@@ -47,5 +35,3 @@ DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OS
 DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
 
 DLite is most definitely *not* recommended for any kind of production use.
-
-Odds are you'll notice a lot of `socat` processes running. That's normal. Because Docker sometimes sends EOF bytes the timeout in socat is set to 600 seconds. Unused child processes will close on their own within ten minutes of when data stops moving through them.
