@@ -6,12 +6,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/kardianos/osext"
 )
 
 func AddSudoer() error {
 	user := os.Getenv("SUDO_USER")
 
-	path, err := filepath.Abs(os.Args[0])
+	path, err := osext.Executable()
 	if err != nil {
 		return err
 	}
