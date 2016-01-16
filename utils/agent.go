@@ -3,7 +3,8 @@ package utils
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+
+	"github.com/kardianos/osext"
 )
 
 const template = `<?xml version="1.0" encoding="UTF-8"?>
@@ -25,7 +26,7 @@ const template = `<?xml version="1.0" encoding="UTF-8"?>
 `
 
 func CreateAgent() error {
-	path, err := filepath.Abs(os.Args[0])
+	path, err := osext.Executable()
 	if err != nil {
 		return err
 	}
