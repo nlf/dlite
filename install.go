@@ -1,147 +1,59 @@
 package main
 
 import (
-	"archive/tar"
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-
-	"github.com/codegangsta/cli"
-	"github.com/johanneswuerbach/nfsexports"
+	"github.com/nlf/dlite/utils"
 	"github.com/satori/go.uuid"
 )
 
-func installHandler(ctx *cli.Context) {
-	if uid := os.Geteuid(); uid != 0 {
-		log.Fatalln("the install command requires 'sudo'")
-	}
-
-	// read params
-	cpuCount := ctx.Int("cpu")
-	diskSize := ctx.Int("disk")
-	memSize := ctx.Int("memory")
-	sshKey := os.ExpandEnv(ctx.String("ssh-key"))
-
-	log.Printf("Installing with %dGB disk, %dGB of ram and %d CPUs\nUsing SSH key from %s\n", diskSize, memSize, cpuCount, sshKey)
-	uuid := uuid.NewV4().String()
-
-	createDisk(sshKey, diskSize)
-	downloadDhyveOS()
-	addExport(uuid)
-	saveConfig(uuid, cpuCount, memSize)
+type InstallCommand struct {
+	Cpus    int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default:"1"`
+	Disk    int    `short:"d" long:"disk" description:"size of disk to create" default:"30"`
+	Memory  int    `short:"m" long:"memory" description:"amount of memory to allocate" default:"1"`
+	SSHKey  string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
+	Version string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
 }
 
-func createDisk(sshKey string, diskSize int) {
-	// read ssh key file
-	keyBytes, err := ioutil.ReadFile(sshKey)
+func (c *InstallCommand) Execute(args []string) error {
+	utils.EnsureSudo()
+	err := utils.CreateDir()
 	if err != nil {
-		log.Fatalf("Failed to read SSH key file at %s\n%s", sshKey, err.Error())
+		return err
 	}
 
-	// create the tarball header
-	buffer := new(bytes.Buffer)
-	tarball := tar.NewWriter(buffer)
-	files := []struct {
-		Name string
-		Body []byte
-	}{
-		{"dhyve, please format-me", []byte("dhyve, please format-me")},
-		{".ssh/authorized_keys", keyBytes},
+	fmap := utils.FunctionMap{}
+	fmap["Building disk image"] = func () error {
+		return utils.CreateDisk(c.SSHKey, c.Disk)
 	}
 
-	for _, file := range files {
-		if err = tarball.WriteHeader(&tar.Header{
-			Name: file.Name,
-			Mode: 0644,
-			Size: int64(len(file.Body)),
-		}); err != nil {
-			log.Fatalln(err)
+	fmap["Downloading OS"] = func () error {
+		if c.Version == "" {
+			latest, err := utils.GetLatestOSVersion()
+			if err != nil {
+				return err
+			}
+			c.Version = latest
 		}
-
-		if _, err = tarball.Write(file.Body); err != nil {
-			log.Fatalln(err)
-		}
+		return utils.DownloadOS(c.Version)
 	}
 
-	if err = tarball.Close(); err != nil {
-		log.Fatalln(err)
+	fmap["Writing configuration"] = func () error {
+		uuid := uuid.NewV1().String()
+		return utils.SaveConfig(uuid, c.Cpus, c.Memory)
 	}
 
-	// write the tarball to a real file
-	f, err := os.Create(filepath.Join(PREFIX, "/var/db/dlite/disk.img"))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer f.Close()
-	_, err = f.Write(buffer.Bytes())
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// write zeroes to the file
-	halfGig := make([]byte, 536870912, 536870912)
-	for count := 0; count < diskSize*2; count++ {
-		_, err = f.Write(halfGig)
+	fmap["Creating launchd agent"] = func () error {
+		err := utils.AddSudoer()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
+
+		return utils.CreateAgent()
 	}
+
+	return utils.Spin(fmap)
 }
 
-func downloadDhyveOS() {
-	resp, err := http.Get("https://api.github.com/repos/nlf/dhyve-os/releases/latest")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer resp.Body.Close()
-	var latest struct {
-		Tag string `json:"tag_name"`
-	}
-
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&latest)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	files := []string{"bzImage", "rootfs.cpio.xz"}
-	for _, file := range files {
-		output, err := os.Create(filepath.Join(PREFIX, "/usr/share/dlite", file))
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		defer output.Close()
-
-		resp, err = http.Get("https://github.com/nlf/dhyve-os/releases/download/" + latest.Tag + "/" + file)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		defer resp.Body.Close()
-		_, err = io.Copy(output, resp.Body)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-}
-
-func addExport(uuid string) {
-	export := fmt.Sprintf("/Users %s -alldirs -mapall=%s:%s", "-network 192.168.64.0 -mask 255.255.255.0", os.Getuid(), os.Getgid())
-	if _, err := nfsexports.Add("", fmt.Sprintf("dlite %s", uuid), export); err != nil {
-		log.Fatalln(err)
-	}
-
-	err := nfsexports.ReloadDaemon()
-	if err != nil {
-		log.Fatalln(err)
-	}
+func init() {
+	var installCommand InstallCommand
+	cmd.AddCommand("install", "install dlite", "creates an empty disk image, downloads the os, saves configuration and creates a launchd agent", &installCommand)
 }
