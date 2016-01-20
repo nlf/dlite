@@ -17,7 +17,7 @@ func AddSudoer() error {
 	if err != nil {
 		return err
 	}
-	sudoer := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: %s", user, path)
+	sudoer := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: %s\n", user, path)
 
 	file, err := os.OpenFile("/private/etc/sudoers", os.O_RDWR, 0600)
 	if err != nil {
