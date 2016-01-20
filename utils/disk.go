@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"strconv"
+	"strings"
 )
 
 func changePermissions(path string) error {
@@ -52,6 +54,20 @@ func RemoveDir() error {
 }
 
 func CreateDisk(sshKey string, size int) error {
+	if strings.Contains(sshKey, "$HOME") {
+		username := os.Getenv("SUDO_USER")
+		if username == "" {
+			username = os.Getenv("USER")
+		}
+
+		me, err := user.Lookup(username)
+		if err != nil {
+			return err
+		}
+
+		sshKey = strings.Replace(sshKey, "$HOME", me.HomeDir, -1)
+	}
+
 	sshKey = os.ExpandEnv(sshKey)
 	keyBytes, err := ioutil.ReadFile(sshKey)
 	if err != nil {
