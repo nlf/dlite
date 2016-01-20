@@ -33,6 +33,9 @@ func GetIP(uuid string) (string, error) {
 
 			file, err := os.Open("/var/db/dhcpd_leases")
 			if err != nil {
+				if os.IsNotExist(err) {
+					continue
+				}
 				value <- result{"", err}
 				return
 			}
