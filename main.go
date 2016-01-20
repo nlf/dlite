@@ -6,7 +6,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const VERSION = "1.0.2"
+const VERSION = "1.0.3"
 
 type Options struct{}
 
