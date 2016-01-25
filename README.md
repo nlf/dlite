@@ -15,7 +15,7 @@ See the output of `sudo dlite install --help` for additional options.
 This will create the necessary files and a launchd agent to manage the process. After you've installed, run:
 
 ```
-launchctl start local.dlite
+launchctl load ~/Library/LaunchAgents/local.dlite.plist
 ```
 
 as your user to start the process. DLite will start automatically upon logging in as well.
