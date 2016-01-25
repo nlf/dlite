@@ -39,7 +39,11 @@ func CreateAgent() error {
 
 	plist := fmt.Sprintf(template, path)
 	_, err = file.WriteString(plist)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return changePermissions(filePath)
 }
 
 func RemoveAgent() error {
