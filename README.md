@@ -2,6 +2,10 @@
 
 The simplest way to use Docker on OSX.
 
+##Thanks
+
+DLite leverages [xhyve](https://github.com/mist64/xhyve) through the [libxhyve](https://github.com/TheNewNormal/libxhyve) Go bindings for virtualization. Without these projects and the people behind them, this project wouldn't exist.
+
 ##Installation
 
 Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, then:
