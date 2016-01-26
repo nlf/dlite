@@ -32,7 +32,9 @@ launchctl start local.dlite
 
 ##Usage
 
-Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
+To start the service, run `launchctl start local.dlite`
+
+Then just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
 
 When opening ports in your docker containers, connect to `local.docker` instead of `localhost`. Everything else should just work™
 
