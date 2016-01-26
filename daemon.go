@@ -24,7 +24,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 		return err
 	}
 
-	err = utils.AddHost(ip)
+	err = utils.AddHost(config.Hostname, ip)
 	if err != nil {
 		return err
 	}

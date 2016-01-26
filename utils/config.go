@@ -9,9 +9,10 @@ type Config struct {
 	Uuid     string `json:"uuid"`
 	CpuCount int    `json:"cpu_count"`
 	Memory   int    `json:"memory"`
+	Hostname string `json:"hostname"`
 }
 
-func SaveConfig(uuid string, cpus, mem int) error {
+func SaveConfig(config Config) error {
 	path := os.ExpandEnv("$HOME/.dlite/config.json")
 	output, err := os.Create(path)
 	if err != nil {
@@ -19,11 +20,6 @@ func SaveConfig(uuid string, cpus, mem int) error {
 	}
 
 	defer output.Close()
-	config := Config{
-		Uuid:     uuid,
-		CpuCount: cpus,
-		Memory:   mem,
-	}
 
 	b, err := json.Marshal(config)
 	if err != nil {

@@ -36,6 +36,8 @@ Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating s
 
 When opening ports in your docker containers, connect to `local.docker` instead of `localhost`. Everything else should just work™
 
+Note that the `local.docker` hostname is configurable by passing the `-n` flag to the install command, as in `sudo dlite install -n docker.dev`
+
 If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` should do the trick.
 
 ##Caveats

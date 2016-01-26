@@ -8,9 +8,10 @@ import (
 type InstallCommand struct {
 	Cpus    int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default:"1"`
 	Disk    int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"30"`
-	Memory  int    `short:"m" long:"memory" description:"amount of memory to allocate" default:"1"`
+	Memory  int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"1"`
 	SSHKey  string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
 	Version string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
+	Hostname string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
 }
 
 func (c *InstallCommand) Execute(args []string) error {
@@ -38,7 +39,12 @@ func (c *InstallCommand) Execute(args []string) error {
 
 	fmap["Writing configuration"] = func() error {
 		uuid := uuid.NewV1().String()
-		return utils.SaveConfig(uuid, c.Cpus, c.Memory)
+		return utils.SaveConfig(utils.Config{
+			Uuid: uuid,
+			CpuCount: c.Cpus,
+			Memory: c.Memory,
+			Hostname: c.Hostname,
+		})
 	}
 
 	fmap["Creating launchd agent"] = func() error {

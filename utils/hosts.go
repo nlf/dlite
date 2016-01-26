@@ -66,9 +66,9 @@ func GetIP(uuid string) (string, error) {
 	}
 }
 
-func AddHost(ip string) error {
+func AddHost(hostname, ip string) error {
 	ipRe := regexp.MustCompile(`.*# added by dlite$`)
-	ipLine := ip + " local.docker # added by dlite"
+	ipLine := ip + " " + hostname + " # added by dlite"
 
 	file, err := os.OpenFile("/etc/hosts", os.O_RDWR, 0644)
 	if err != nil {
