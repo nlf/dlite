@@ -20,6 +20,7 @@ This will create the necessary files and a launchd agent to manage the process. 
 
 ```
 launchctl load ~/Library/LaunchAgents/local.dlite.plist
+launchctl start local.dlite
 ```
 
 as your user to start the process. DLite will start automatically upon logging in as well.
