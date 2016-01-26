@@ -42,6 +42,8 @@ If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` shou
 
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer.
 
+Xhyve, and therefor DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the *full size* of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
+
 DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
 
 DLite is most definitely *not* recommended for any kind of production use.
