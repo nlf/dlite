@@ -24,6 +24,12 @@ launchctl load ~/Library/LaunchAgents/local.dlite.plist
 
 as your user to start the process. DLite will start automatically upon logging in as well.
 
+Then to start the virtual machine run:
+
+```
+launchctl start local.dlite
+```
+
 ##Usage
 
 Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
