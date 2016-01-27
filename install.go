@@ -6,11 +6,11 @@ import (
 )
 
 type InstallCommand struct {
-	Cpus    int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default:"1"`
-	Disk    int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
-	Memory  int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"2"`
-	SSHKey  string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
-	Version string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
+	Cpus     int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default:"1"`
+	Disk     int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
+	Memory   int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"2"`
+	SSHKey   string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
+	Version  string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
 	Hostname string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
 }
 
