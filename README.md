@@ -38,6 +38,10 @@ If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` shou
 
 A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again.
 
+If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite`. Save the hosts file and run `dlite start` and try again.
+
+Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
+
 ##Caveats
 
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer.
