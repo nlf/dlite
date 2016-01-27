@@ -21,7 +21,6 @@ func (c *InstallCommand) Execute(args []string) error {
 		return err
 	}
 
-	uuid := uuid.NewV1().String()
 	steps := utils.Steps{
 		{
 			"Building disk image",
@@ -56,6 +55,7 @@ func (c *InstallCommand) Execute(args []string) error {
 		{
 			"Writing configuration",
 			func() error {
+				uuid := uuid.NewV1().String()
 				return utils.SaveConfig(utils.Config{
 					Uuid:     uuid,
 					CpuCount: c.Cpus,
@@ -73,14 +73,6 @@ func (c *InstallCommand) Execute(args []string) error {
 				}
 
 				return utils.CreateAgent()
-			},
-		},
-		{
-			"Starting the virtual machine",
-			func() error {
-				utils.StartAgent()
-				_, err := utils.GetIP(uuid) // if we can get the IP the vm is up
-				return err
 			},
 		},
 	}
