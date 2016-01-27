@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -148,5 +149,10 @@ func AddExport(uuid string) error {
 		return err
 	}
 
-	return nfsexports.ReloadDaemon()
+	err = nfsexports.ReloadDaemon()
+	if err != nil {
+		return exec.Command("sudo", "nfsd", "start").Run()
+	}
+
+	return err
 }
