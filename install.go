@@ -21,42 +21,52 @@ func (c *InstallCommand) Execute(args []string) error {
 		return err
 	}
 
-	fmap := utils.FunctionMap{}
-	fmap["Building disk image"] = func() error {
-		return utils.CreateDisk(c.SSHKey, c.Disk)
+	steps := utils.Steps{
+		{
+			"Building disk image",
+			func() error {
+				return utils.CreateDisk(c.SSHKey, c.Disk)
+			},
+		},
+		{
+			"Downloading OS",
+			func() error {
+				if c.Version == "" {
+					latest, err := utils.GetLatestOSVersion()
+					if err != nil {
+						return err
+					}
+					c.Version = latest
+				}
+				return utils.DownloadOS(c.Version)
+			},
+		},
+		{
+			"Writing configuration",
+			func() error {
+				uuid := uuid.NewV1().String()
+				return utils.SaveConfig(utils.Config{
+					Uuid:     uuid,
+					CpuCount: c.Cpus,
+					Memory:   c.Memory,
+					Hostname: c.Hostname,
+				})
+			},
+		},
+		{
+			"Creating launchd agent",
+			func() error {
+				err := utils.AddSudoer()
+				if err != nil {
+					return err
+				}
+
+				return utils.CreateAgent()
+			},
+		},
 	}
 
-	fmap["Downloading OS"] = func() error {
-		if c.Version == "" {
-			latest, err := utils.GetLatestOSVersion()
-			if err != nil {
-				return err
-			}
-			c.Version = latest
-		}
-		return utils.DownloadOS(c.Version)
-	}
-
-	fmap["Writing configuration"] = func() error {
-		uuid := uuid.NewV1().String()
-		return utils.SaveConfig(utils.Config{
-			Uuid: uuid,
-			CpuCount: c.Cpus,
-			Memory: c.Memory,
-			Hostname: c.Hostname,
-		})
-	}
-
-	fmap["Creating launchd agent"] = func() error {
-		err := utils.AddSudoer()
-		if err != nil {
-			return err
-		}
-
-		return utils.CreateAgent()
-	}
-
-	return utils.Spin(fmap)
+	return utils.Spin(steps)
 }
 
 func init() {

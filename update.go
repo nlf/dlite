@@ -9,19 +9,23 @@ type UpdateCommand struct {
 }
 
 func (c *UpdateCommand) Execute(args []string) error {
-	fmap := utils.FunctionMap{}
-	fmap["Downloading OS"] = func() error {
-		if c.Version == "" {
-			latest, err := utils.GetLatestOSVersion()
-			if err != nil {
-				return err
-			}
-			c.Version = latest
-		}
-		return utils.DownloadOS(c.Version)
+	steps := utils.Steps{
+		{
+			"Downloading OS",
+			func() error {
+				if c.Version == "" {
+					latest, err := utils.GetLatestOSVersion()
+					if err != nil {
+						return err
+					}
+					c.Version = latest
+				}
+				return utils.DownloadOS(c.Version)
+			},
+		},
 	}
 
-	return utils.Spin(fmap)
+	return utils.Spin(steps)
 }
 
 func init() {

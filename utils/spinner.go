@@ -7,21 +7,25 @@ import (
 	"github.com/briandowns/spinner"
 )
 
-type wrapped func() error
-type FunctionMap map[string]wrapped
+type Step struct {
+	Prefix string
+	Action func() error
+}
 
-func Spin(fm FunctionMap) error {
-	for prefix, fn := range fm {
+type Steps []Step
+
+func Spin(fm Steps) error {
+	for _, fn := range fm {
 		s := spinner.New(spinner.CharSets[9], time.Millisecond*100)
-		s.Prefix = fmt.Sprintf("%s: ", prefix)
+		s.Prefix = fmt.Sprintf("%s: ", fn.Prefix)
 		s.Start()
-		err := fn()
+		err := fn.Action()
 		s.Stop()
 		if err != nil {
-			fmt.Printf("\r%s: ERROR - %s\n", prefix, err)
+			fmt.Printf("\r%s: ERROR - %s\n", fn.Prefix, err)
 			return err
 		} else {
-			fmt.Printf("\r%s: done\n", prefix)
+			fmt.Printf("\r%s: done\n", fn.Prefix)
 		}
 	}
 
