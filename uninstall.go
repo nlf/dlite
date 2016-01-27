@@ -8,21 +8,27 @@ type UninstallCommand struct{}
 
 func (c *UninstallCommand) Execute(args []string) error {
 	utils.EnsureSudo()
-	fmap := utils.FunctionMap{}
-	fmap["Removing files"] = func() error {
-		err := utils.RemoveSudoer()
-		if err != nil {
-			return err
-		}
+	steps := utils.Steps{
+		{
+			"Removing files",
+			func() error {
+				err := utils.RemoveSudoer()
+				if err != nil {
+					return err
+				}
 
-		return utils.RemoveDir()
+				return utils.RemoveDir()
+			},
+		},
+		{
+			"Removing launchd agent",
+			func() error {
+				return utils.RemoveAgent()
+			},
+		},
 	}
 
-	fmap["Removing launchd agent"] = func() error {
-		return utils.RemoveAgent()
-	}
-
-	return utils.Spin(fmap)
+	return utils.Spin(steps)
 }
 
 func init() {

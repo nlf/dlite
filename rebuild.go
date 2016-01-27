@@ -10,12 +10,15 @@ type RebuildCommand struct {
 }
 
 func (c *RebuildCommand) Execute(args []string) error {
-	fmap := utils.FunctionMap{}
-	fmap["Rebuilding disk image"] = func() error {
-		return utils.CreateDisk(c.SSHKey, c.Disk)
+	steps := utils.Steps{
+		{
+			"Rebuilding disk image",
+			func() error {
+				return utils.CreateDisk(c.SSHKey, c.Disk)
+			},
+		},
 	}
-
-	return utils.Spin(fmap)
+	return utils.Spin(steps)
 }
 
 func init() {
