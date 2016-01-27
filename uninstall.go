@@ -10,6 +10,14 @@ func (c *UninstallCommand) Execute(args []string) error {
 	utils.EnsureSudo()
 	steps := utils.Steps{
 		{
+			"Removing launchd agent",
+			func() error {
+				utils.StopAgent()
+				utils.RemoveHost()
+				return utils.RemoveAgent()
+			},
+		},
+		{
 			"Removing files",
 			func() error {
 				err := utils.RemoveSudoer()
@@ -18,12 +26,6 @@ func (c *UninstallCommand) Execute(args []string) error {
 				}
 
 				return utils.RemoveDir()
-			},
-		},
-		{
-			"Removing launchd agent",
-			func() error {
-				return utils.RemoveAgent()
 			},
 		},
 	}

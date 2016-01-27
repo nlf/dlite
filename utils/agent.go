@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/kardianos/osext"
 )
@@ -49,4 +50,24 @@ func CreateAgent() error {
 func RemoveAgent() error {
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
 	return os.RemoveAll(filePath)
+}
+
+func StopAgent() error {
+	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
+	err := exec.Command("launchctl", "stop", "local.dlite").Run()
+	if err != nil {
+		return err
+	}
+
+	return exec.Command("launchctl", "unload", filePath).Run()
+}
+
+func StartAgent() error {
+	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
+	err := exec.Command("launchctl", "load", filePath).Run()
+	if err != nil {
+		return err
+	}
+
+	return exec.Command("launchctl", "start", "local.dlite").Run()
 }
