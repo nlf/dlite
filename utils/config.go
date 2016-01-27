@@ -10,6 +10,7 @@ type Config struct {
 	CpuCount int    `json:"cpu_count"`
 	Memory   int    `json:"memory"`
 	Hostname string `json:"hostname"`
+	Share    string `json:"share"`
 }
 
 func SaveConfig(config Config) error {

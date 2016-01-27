@@ -13,7 +13,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 		return err
 	}
 
-	err = utils.AddExport(config.Uuid)
+	err = utils.AddExport(config.Uuid, config.Share)
 	if err != nil {
 		return err
 	}

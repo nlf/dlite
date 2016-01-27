@@ -12,6 +12,7 @@ type InstallCommand struct {
 	SSHKey   string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
 	Version  string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
 	Hostname string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
+	Share    string `short:"S" long:"share" description:"directory to export from NFS" default:"/Users"`
 }
 
 func (c *InstallCommand) Execute(args []string) error {
@@ -61,6 +62,7 @@ func (c *InstallCommand) Execute(args []string) error {
 					CpuCount: c.Cpus,
 					Memory:   c.Memory,
 					Hostname: c.Hostname,
+					Share:    c.Share,
 				})
 			},
 		},

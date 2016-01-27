@@ -146,8 +146,12 @@ func RemoveHost() error {
 	return file.Truncate(int64(n))
 }
 
-func AddExport(uuid string) error {
-	export := fmt.Sprintf("/Users %s -alldirs -mapall=%s:%s", "-network 192.168.64.0 -mask 255.255.255.0", os.Getenv("SUDO_UID"), os.Getenv("SUDO_GID"))
+func AddExport(uuid, share string) error {
+	if share == "" {
+		share = "/Users"
+	}
+
+	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -mapall=%s:%s", share, os.Getenv("SUDO_UID"), os.Getenv("SUDO_GID"))
 	_, err := nfsexports.Add("", "dlite", export)
 	if err != nil {
 		return err
