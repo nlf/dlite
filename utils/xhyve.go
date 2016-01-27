@@ -21,7 +21,7 @@ func StartVM(config Config) chan error {
 			"-s", "2:0,virtio-net",
 			"-s", "4,virtio-blk," + os.ExpandEnv("$HOME/.dlite/disk.img"),
 			"-U", config.Uuid,
-			"-f", fmt.Sprintf("kexec,%s,%s,%s", os.ExpandEnv("$HOME/.dlite/bzImage"), os.ExpandEnv("$HOME/.dlite/rootfs.cpio.xz"), "console=ttyS0 hostname=dlite uuid="+config.Uuid),
+			"-f", fmt.Sprintf("kexec,%s,%s,%s", os.ExpandEnv("$HOME/.dlite/bzImage"), os.ExpandEnv("$HOME/.dlite/rootfs.cpio.xz"), "console=ttyS0 hostname=dlite uuid="+config.Uuid+" share="+config.Share),
 		}
 
 		err := xhyve.Run(args, ptyCh)
