@@ -68,6 +68,10 @@ func GetIP(uuid string) (string, error) {
 }
 
 func AddHost(hostname, ip string) error {
+	if hostname == "" {
+		hostname = "local.docker"
+	}
+
 	ipRe := regexp.MustCompile(`.*# added by dlite$`)
 	ipLine := ip + " " + hostname + " # added by dlite"
 
