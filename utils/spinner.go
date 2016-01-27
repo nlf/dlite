@@ -22,7 +22,7 @@ func Spin(fm Steps) error {
 		err := fn.Action()
 		s.Stop()
 		if err != nil {
-			fmt.Printf("\r%s: ERROR - %s\n", fn.Prefix, err)
+			fmt.Printf("\r%s: ERROR!\n", fn.Prefix)
 			return err
 		} else {
 			fmt.Printf("\r%s: done\n", fn.Prefix)

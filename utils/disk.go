@@ -3,11 +3,14 @@ package utils
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"github.com/ricochet2200/go-disk-usage/du"
 )
 
 func changePermissions(path string) error {
@@ -66,6 +69,11 @@ func CreateDisk(sshKey string, size int) error {
 		}
 
 		sshKey = strings.Replace(sshKey, "$HOME", me.HomeDir, -1)
+	}
+
+	usage := du.NewDiskUsage(os.ExpandEnv("$HOME/.dlite"))
+	if (usage.Free() / (1024 * 1024 * 1024)) < uint64(size) {
+		return fmt.Errorf("Not enough free space to allocate a %dGiB disk image", size)
 	}
 
 	sshKey = os.ExpandEnv(sshKey)
