@@ -19,16 +19,10 @@ See the output of `sudo dlite install --help` for additional options.
 This will create the necessary files and a launchd agent to manage the process. After you've installed, run:
 
 ```
-launchctl load ~/Library/LaunchAgents/local.dlite.plist
+dlite start
 ```
 
 as your user to start the process. DLite will start automatically upon logging in as well.
-
-Then to start the virtual machine run:
-
-```
-launchctl start local.dlite
-```
 
 ##Usage
 
@@ -39,6 +33,10 @@ When opening ports in your docker containers, connect to `local.docker` instead 
 Note that the `local.docker` hostname is configurable by passing the `-n` flag to the install command, as in `sudo dlite install -n docker.dev`
 
 If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` should do the trick.
+
+##Troubleshooting
+
+A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again.
 
 ##Caveats
 
