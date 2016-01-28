@@ -8,6 +8,8 @@ DLite leverages [xhyve](https://github.com/mist64/xhyve) through the [libxhyve](
 
 ##Installation
 
+### Standalone
+
 Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, then:
 
 ```
@@ -23,6 +25,20 @@ dlite start
 ```
 
 as your user to start the process. DLite will start automatically upon logging in as well.
+
+### Source
+
+If you have a working [Go development environment](https://golang.org/doc/install) you can build dlite from source by running:
+
+```
+go get github.com/nlf/dlite
+```
+
+After compiling dlite simply follow the directions above beginning with:
+
+```
+sudo dlite install
+```
 
 ##Updating your VM
 
