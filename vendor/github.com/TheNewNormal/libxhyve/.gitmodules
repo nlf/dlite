@@ -1,0 +1,3 @@
+[submodule "vendor/xhyve"]
+	path = vendor/xhyve
+	url = https://github.com/mist64/xhyve.git
