@@ -24,6 +24,16 @@ dlite start
 
 as your user to start the process. DLite will start automatically upon logging in as well.
 
+##Updating your VM
+
+It's possible to update your virtual machine without having to rebuild it entirely. To do so, run the following commands
+
+```
+dlite stop
+dlite update
+dlite start
+```
+
 ##Usage
 
 Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
