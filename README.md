@@ -36,7 +36,7 @@ If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` shou
 
 ##Troubleshooting
 
-A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again.
+A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again. Note that dlite adds its export when it is started, not when it is installed, so make sure to either clean your exports file or specify a shared directory that doesn't conflict with existing shares when you install.
 
 If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite`. Save the hosts file and run `dlite start` and try again.
 
