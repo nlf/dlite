@@ -40,6 +40,10 @@ After compiling dlite simply follow the directions above beginning with:
 sudo dlite install
 ```
 
+##Updating DLite
+
+The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
+
 ##Updating your VM
 
 It's possible to update your virtual machine without having to rebuild it entirely. To do so, run the following commands
