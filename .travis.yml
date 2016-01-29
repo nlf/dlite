@@ -1,0 +1,32 @@
+# Force OS X.
+language: objective-c
+matrix:
+  include:
+    - env: OSX=10.11
+      os: osx
+      osx_image: xcode7.2
+    - env: OSX=10.10
+      os: osx
+      osx_image: xcode7.1
+
+#before_install:
+#  - brew update
+#  - brew outdated go || brew upgrade go
+
+install:
+  - export GOPATH=$TRAVIS_BUILD_DIR
+  - export BUILD_PATH=$TRAVIS_BUILD_DIR/src/github.com/nlf/dlite
+  - mkdir -p $BUILD_PATH
+  - shopt -s extglob dotglob
+  - mv !(src) $BUILD_PATH
+  - shopt -u extglob dotglob
+
+script:
+  - cd $BUILD_PATH
+  - make dlite
+  - ./dlite version
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
