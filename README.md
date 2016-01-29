@@ -1,6 +1,6 @@
 #DLite
 
-The simplest way to use Docker on OSX.
+The simplest way to use Docker on OSX. [![Build Status](https://travis-ci.org/nlf/dlite.svg?branch=master)](https://travis-ci.org/nlf/dlite)
 
 ##Thanks
 
