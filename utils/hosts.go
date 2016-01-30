@@ -151,7 +151,7 @@ func AddExport(uuid, share string) error {
 		share = "/Users"
 	}
 
-	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -mapall=%s:%s", share, os.Getenv("SUDO_UID"), os.Getenv("SUDO_GID"))
+	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -maproot=root:wheel", share)
 	_, err := nfsexports.Add("", "dlite", export)
 	if err != nil {
 		return err
