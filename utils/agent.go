@@ -32,6 +32,17 @@ func CreateAgent() error {
 		return err
 	}
 
+	fileDir := os.ExpandEnv("$HOME/Library/LaunchAgents")
+	err = os.MkdirAll(fileDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = changePermissions(fileDir)
+	if err != nil {
+		return err
+	}
+
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
 	file, err := os.Create(filePath)
 	if err != nil {
