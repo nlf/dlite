@@ -40,6 +40,15 @@ After compiling dlite simply follow the directions above beginning with:
 sudo dlite install
 ```
 
+### Homebrew
+
+If you have [Homebrew](http://brew.sh/), just run :
+
+```
+brew install dlite
+sudo dlite install
+```
+
 ##Updating DLite
 
 The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
