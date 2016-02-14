@@ -164,3 +164,17 @@ func AddExport(uuid, share string) error {
 
 	return err
 }
+
+func RemoveExport() error {
+	_, err := nfsexports.Remove("", "dlite")
+	if err != nil {
+		return err
+	}
+
+	err = nfsexports.ReloadDaemon()
+	if err != nil {
+		return exec.Command("sudo", "nfsd", "start").Run()
+	}
+
+	return err
+}

@@ -14,6 +14,7 @@ func (c *UninstallCommand) Execute(args []string) error {
 			func() error {
 				utils.StopAgent()
 				utils.RemoveHost()
+				utils.RemoveExport()
 				return utils.RemoveAgent()
 			},
 		},
