@@ -6,43 +6,47 @@ The simplest way to use Docker on OSX. [![Build Status](https://travis-ci.org/nl
 
 DLite leverages [xhyve](https://github.com/mist64/xhyve) through the [libxhyve](https://github.com/TheNewNormal/libxhyve) Go bindings for virtualization. Without these projects and the people behind them, this project wouldn't exist.
 
-##Installation
+## Installation
 
-### Standalone
+There are several ways to install dlite. You may install it with [Homebrew](http://brew.sh/), download it from github or compile it yourself.
 
-Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, then:
+### Download
+
+1. Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, or
+2. Install it with homebrew: `brew install dlite`
+3. If you have a working [Go development environment](https://golang.org/doc/install) you can build dlite from source by running:
+
+    ```
+    go get github.com/nlf/dlite
+    ```
+    
+    After that you need to compile it (run `make dlite` in the `src/github.com/nlf/dlite` dir.)
+
+### Initialization
+
+To create the necessary files and a launchd agent which manages the process, simply run
 
 ```
 sudo dlite install
 ```
 
-See the output of `sudo dlite install --help` for additional options.
+See the output of `sudo dlite install --help` for additional options, like changing number of CPUs, Disk Size, et cetera.
 
-This will create the necessary files and a launchd agent to manage the process. After you've installed, run:
+After you've installed, you need to start the process:
 
 ```
 dlite start
 ```
 
-as your user to start the process. DLite will start automatically upon logging in as well.
-
-### Source
-
-If you have a working [Go development environment](https://golang.org/doc/install) you can build dlite from source by running:
-
-```
-go get github.com/nlf/dlite
-```
-
-After compiling dlite simply follow the directions above beginning with:
-
-```
-sudo dlite install
-```
+DLite will start automatically upon logging in as well.
 
 ##Updating DLite
 
 The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
+
+To install the updated binary with Homebrew simple run `brew upgrade dlite`.
+
+If you update dlite, you probably want to update your VM as well:
 
 ##Updating your VM
 
