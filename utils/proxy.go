@@ -3,8 +3,9 @@ package utils
 import (
 	"io"
 	"net"
+	"net/http"
 	"os"
-	"sync"
+	"strings"
 )
 
 func Proxy(ip string) error {
@@ -26,44 +27,73 @@ func Proxy(ip string) error {
 		return err
 	}
 
-	wg := &sync.WaitGroup{}
-	for {
-		client, err := listener.Accept()
-		if err != nil {
-			return nil
-		}
+	handler := http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		r.URL.Scheme = "http"
+		r.URL.Host = ip+":2375"
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			// defer client.Close()
-			server, err := net.Dial("tcp", ip+":2375")
-			if err != nil {
+		if len(r.Header["Upgrade"]) > 0 && strings.ToLower(r.Header["Upgrade"][0]) == "tcp" {
+			hj, ok := w.(http.Hijacker)
+			if !ok {
+				w.WriteHeader(http.StatusServiceUnavailable)
 				return
 			}
-			// defer server.Close()
-			go func() {
-				_, err := io.Copy(client, server)
-				if err != nil {
-					return
-				}
 
-				client.Close()
-				server.Close()
+			conn, _, err := hj.Hijack()
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			defer conn.Close()
+
+			backend, err := net.Dial("tcp", ip+":2375")
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			defer backend.Close()
+
+			err = r.Write(backend)
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			finished := make(chan bool, 1)
+			go func() {
+				io.Copy(backend, conn)
 			}()
 
 			go func() {
-				_, err := io.Copy(server, client)
-				if err != nil {
-					return
-				}
-
-				client.Close()
-				server.Close()
+				io.Copy(conn, backend)
+				finished <- true
 			}()
-		}()
+
+			<-finished
+		} else {
+			resp, err := http.DefaultTransport.RoundTrip(r)
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			defer resp.Body.Close()
+
+			for k, v := range resp.Header {
+				for _, vv := range v {
+					w.Header().Add(k, vv)
+				}
+			}
+
+			w.WriteHeader(resp.StatusCode)
+			io.Copy(w, resp.Body)
+		}
+	})
+
+	server := http.Server{
+		Handler: handler,
 	}
 
-	wg.Wait()
-	return nil
+	return server.Serve(listener)
 }
