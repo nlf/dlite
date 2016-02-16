@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/nlf/dlite/utils"
 	"github.com/satori/go.uuid"
 )
@@ -17,9 +20,33 @@ type InstallCommand struct {
 
 func (c *InstallCommand) Execute(args []string) error {
 	utils.EnsureSudo()
-	err := utils.CreateDir()
+
+	fmt.Println("The install command will make the following changes to your system:")
+	fmt.Println("- Create a '.dlite' directory in your home")
+	fmt.Printf("- Create a %dGB disk image in the '.dlite' directory\n", c.Disk)
+	if c.Version == "" {
+		fmt.Println("- Download the latest version of DhyveOS to the '.dlite' directory")
+	} else {
+		fmt.Printf("- Download version %s of DhyveOS to the '.dlite' directory\n", c.Version)
+	}
+	fmt.Println("- Create a 'config.json' file in the '.dlite' directory")
+	fmt.Println("- Add a line to your sudoers file to allow running the 'dlite' binary without a password")
+	fmt.Println("- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon")
+	fmt.Printf("Would you like to continue? (Y/n): ")
+
+	var response string
+	_, err := fmt.Scanln(&response)
 	if err != nil {
 		return err
+	}
+
+	response = strings.ToLower(response)
+	if response == "n" || response == "no" {
+		return fmt.Errorf("Aborted install due to user input")
+	}
+
+	if response != "" && response != "y" && response != "yes" {
+		return fmt.Errorf("Aborted install due to invalid user input")
 	}
 
 	steps := utils.Steps{
