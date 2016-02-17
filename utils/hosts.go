@@ -106,7 +106,7 @@ func AddHost(hostname, ip string) error {
 		return err
 	}
 
-	_, err = file.Write([]byte(strings.Join(lines, "\n")+"\n"))
+	_, err = file.Write([]byte(strings.Join(lines, "\n") + "\n"))
 	return err
 }
 
