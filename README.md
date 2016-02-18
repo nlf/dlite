@@ -44,7 +44,7 @@ DLite will start automatically upon logging in as well.
 
 The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
 
-To install the updated binary with Homebrew simple run `brew upgrade dlite`.
+To install the updated binary with Homebrew simply run `brew upgrade dlite`.
 
 If you update dlite, you probably want to update your VM as well:
 
@@ -80,7 +80,7 @@ Note that `launchctl` commands appear to not work correctly when run inside tmux
 
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer. You also need a fairly recent mac. You can tell if your computer is new enough by running `sysctl kern.hv_support` in a terminal. If you see `kern.hv_support: 1` as a response, you're good to go. If not, unfortunately your computer is too old to leverage the hypervisor framework and DLite won't work for you.
 
-Xhyve, and therefor DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the *full size* of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
+Xhyve, and therefore DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the *full size* of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
 
 DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
 
