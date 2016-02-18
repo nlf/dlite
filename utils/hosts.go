@@ -106,7 +106,7 @@ func AddHost(hostname, ip string) error {
 		return err
 	}
 
-	_, err = file.Write([]byte(strings.Join(lines, "\n")+"\n"))
+	_, err = file.Write([]byte(strings.Join(lines, "\n") + "\n"))
 	return err
 }
 
@@ -153,6 +153,20 @@ func AddExport(uuid, share string) error {
 
 	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -maproot=root:wheel", share)
 	_, err := nfsexports.Add("", "dlite", export)
+	if err != nil {
+		return err
+	}
+
+	err = nfsexports.ReloadDaemon()
+	if err != nil {
+		return exec.Command("sudo", "nfsd", "start").Run()
+	}
+
+	return err
+}
+
+func RemoveExport() error {
+	_, err := nfsexports.Remove("", "dlite")
 	if err != nil {
 		return err
 	}
