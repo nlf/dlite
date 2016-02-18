@@ -31,7 +31,15 @@ func Proxy(ip string) error {
 		r.URL.Scheme = "http"
 		r.URL.Host = ip+":2375"
 
-		if len(r.Header["Upgrade"]) > 0 && strings.ToLower(r.Header["Upgrade"][0]) == "tcp" {
+		upgrade := false
+		if strings.HasSuffix(r.URL.Path, "/attach") {
+			upgrade = true
+		} else if len(r.Header["Upgrade"]) > 0 {
+			upgrade_header := strings.ToLower(r.Header["Upgrade"][0])
+			upgrade = upgrade_header == "tcp" || upgrade_header == "websocket"
+		}
+
+		if upgrade {
 			hj, ok := w.(http.Hijacker)
 			if !ok {
 				w.WriteHeader(http.StatusServiceUnavailable)
