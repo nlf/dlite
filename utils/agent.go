@@ -22,6 +22,10 @@ const template = `<?xml version="1.0" encoding="UTF-8"?>
 		</array>
 		<key>RunAtLoad</key>
 		<true/>
+		<key>StandardPath</key>
+		<string>%s</string>
+		<key>StandardErrorPath</key>
+		<string>%s</string>
 	</dict>
 </plist>
 `
@@ -49,7 +53,10 @@ func CreateAgent() error {
 		return err
 	}
 
-	plist := fmt.Sprintf(template, path)
+	outLog := os.ExpandEnv("$HOME/Library/Logs/dlite-out.log")
+	errLog := os.ExpandEnv("$HOME/Library/Logs/dlite-err.log")
+
+	plist := fmt.Sprintf(template, path, outLog, errLog)
 	_, err = file.WriteString(plist)
 	if err != nil {
 		return err

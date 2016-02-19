@@ -34,9 +34,10 @@ func (c *InstallCommand) Execute(args []string) error {
 	fmt.Println("- Create a 'config.json' file in the '.dlite' directory")
 	fmt.Println("- Add a line to your sudoers file to allow running the 'dlite' binary without a password")
 	fmt.Println("- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon")
+	fmt.Println("- Store logs from the daemon in '~/Library/Logs'")
 
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Would you like to continue? (Y/n): ")
+	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
 	if err != nil {
 		return err
