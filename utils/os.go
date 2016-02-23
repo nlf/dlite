@@ -2,9 +2,11 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -40,18 +42,25 @@ func DownloadOS(version string) error {
 		if err != nil {
 			return err
 		}
-
 		defer output.Close()
 
-		resp, err := http.Get("https://github.com/nlf/dhyve-os/releases/download/" + version + "/" + file)
+		url := "https://github.com/nlf/dhyve-os/releases/download/" + version + "/" + file
+		resp, err := http.Get(url)
 		if err != nil {
 			return err
 		}
-
 		defer resp.Body.Close()
-		io.Copy(output, resp.Body)
-		err = changePermissions(path)
+
+		contentLength, err := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
 		if err != nil {
+			return fmt.Errorf("Unable to get Content-Length of '%s': %s", url, err.Error())
+		}
+
+		if _, err := io.CopyN(output, resp.Body, contentLength); err != nil {
+			return fmt.Errorf("Unable to download '%s': %s", url, err.Error())
+		}
+
+		if err := changePermissions(path); err != nil {
 			return err
 		}
 	}
