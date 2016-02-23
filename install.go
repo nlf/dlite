@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/nlf/dlite/utils"
@@ -32,15 +34,15 @@ func (c *InstallCommand) Execute(args []string) error {
 	fmt.Println("- Create a 'config.json' file in the '.dlite' directory")
 	fmt.Println("- Add a line to your sudoers file to allow running the 'dlite' binary without a password")
 	fmt.Println("- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon")
-	fmt.Printf("Would you like to continue? (Y/n): ")
 
-	var response string
-	_, err := fmt.Scanln(&response)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Would you like to continue? (Y/n): ")
+	response, err := reader.ReadString('\n')
 	if err != nil {
 		return err
 	}
 
-	response = strings.ToLower(response)
+	response = strings.ToLower(strings.TrimSpace(response))
 	if response == "n" || response == "no" {
 		return fmt.Errorf("Aborted install due to user input")
 	}
