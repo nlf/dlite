@@ -17,7 +17,7 @@ func AddSudoer() error {
 	if err != nil {
 		return err
 	}
-	sudoer := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: /sbin/nfsd,%s\n", user, path)
+	sudoer := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: /sbin/nfsd,%s", user, path)
 
 	file, err := os.OpenFile("/private/etc/sudoers", os.O_RDWR, 0600)
 	if err != nil {
@@ -41,7 +41,7 @@ func AddSudoer() error {
 	}
 
 	if !exists {
-		lines = append(lines, sudoer)
+		lines = append(lines, sudoer+"\n")
 	}
 
 	_, err = file.Seek(0, 0)
