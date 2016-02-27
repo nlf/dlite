@@ -11,18 +11,22 @@ import (
 const template = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
-	  <key>Label</key>
+	<dict>
+		<key>Label</key>
 		<string>local.dlite</string>
 		<key>ProgramArguments</key>
 		<array>
-		  <string>/usr/bin/sudo</string>
-		  <string>%s</string>
+			<string>/usr/bin/sudo</string>
+			<string>%s</string>
 			<string>daemon</string>
 		</array>
 		<key>RunAtLoad</key>
 		<true/>
-  </dict>
+		<key>StandardPath</key>
+		<string>%s</string>
+		<key>StandardErrorPath</key>
+		<string>%s</string>
+	</dict>
 </plist>
 `
 
@@ -49,7 +53,10 @@ func CreateAgent() error {
 		return err
 	}
 
-	plist := fmt.Sprintf(template, path)
+	outLog := os.ExpandEnv("$HOME/Library/Logs/dlite-out.log")
+	errLog := os.ExpandEnv("$HOME/Library/Logs/dlite-err.log")
+
+	plist := fmt.Sprintf(template, path, outLog, errLog)
 	_, err = file.WriteString(plist)
 	if err != nil {
 		return err
