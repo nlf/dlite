@@ -14,7 +14,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 		return err
 	}
 
-	StartVM(config)
+	done := StartVM(config)
 	ip, err := GetIP(config.Uuid)
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 		return err
 	}
 
-	return Proxy(ip)
+	return Proxy(ip, done)
 }
 
 func init() {

@@ -1,14 +1,48 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
-func Proxy(ip string) error {
+type StoppableListener struct {
+	*net.UnixListener
+	done chan error
+}
+
+func (s *StoppableListener) Accept() (net.Conn, error) {
+	for {
+		s.SetDeadline(time.Now().Add(time.Second))
+
+		select {
+		case <-s.done:
+			return nil, fmt.Errorf("Xhyve exited, stopping proxy")
+		default:
+		}
+
+		newConn, err := s.UnixListener.Accept()
+		if err != nil {
+			netErr, ok := err.(net.Error)
+			if ok && netErr.Timeout() && netErr.Temporary() {
+				continue
+			}
+		}
+
+		return newConn, err
+	}
+}
+
+func (s *StoppableListener) Close() error {
+	close(s.done)
+	return nil
+}
+
+func Proxy(ip string, done chan error) error {
 	_, err := os.Stat("/var/run/docker.sock")
 	if err == nil {
 		err = os.Remove("/var/run/docker.sock")
@@ -17,10 +51,17 @@ func Proxy(ip string) error {
 		}
 	}
 
-	listener, err := net.Listen("unix", "/var/run/docker.sock")
+	addr, err := net.ResolveUnixAddr("unix", "/var/run/docker.sock")
 	if err != nil {
 		return err
 	}
+
+	rawListener, err := net.ListenUnix("unix", addr)
+	if err != nil {
+		return err
+	}
+
+	listener := &StoppableListener{UnixListener: rawListener, done: done}
 
 	err = os.Chmod("/var/run/docker.sock", 0777)
 	if err != nil {
