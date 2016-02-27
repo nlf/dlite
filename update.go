@@ -1,31 +1,27 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type UpdateCommand struct {
 	Version string `short:"v" long:"version" description:"version of DhyveOS to install"`
 }
 
 func (c *UpdateCommand) Execute(args []string) error {
-	steps := utils.Steps{
+	steps := Steps{
 		{
 			"Downloading OS",
 			func() error {
 				if c.Version == "" {
-					latest, err := utils.GetLatestOSVersion()
+					latest, err := GetLatestOSVersion()
 					if err != nil {
 						return err
 					}
 					c.Version = latest
 				}
-				return utils.DownloadOS(c.Version)
+				return DownloadOS(c.Version)
 			},
 		},
 	}
 
-	return utils.Spin(steps)
+	return Spin(steps)
 }
 
 func init() {

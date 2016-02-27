@@ -1,37 +1,33 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type UninstallCommand struct{}
 
 func (c *UninstallCommand) Execute(args []string) error {
-	utils.EnsureSudo()
-	steps := utils.Steps{
+	EnsureSudo()
+	steps := Steps{
 		{
 			"Removing launchd agent",
 			func() error {
-				utils.StopAgent()
-				utils.RemoveHost()
-				utils.RemoveExport()
-				return utils.RemoveAgent()
+				StopAgent()
+				RemoveHost()
+				RemoveExport()
+				return RemoveAgent()
 			},
 		},
 		{
 			"Removing files",
 			func() error {
-				err := utils.RemoveSudoer()
+				err := RemoveSudoer()
 				if err != nil {
 					return err
 				}
 
-				return utils.RemoveDir()
+				return RemoveDir()
 			},
 		},
 	}
 
-	return utils.Spin(steps)
+	return Spin(steps)
 }
 
 func init() {

@@ -1,35 +1,31 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type DaemonCommand struct{}
 
 func (c *DaemonCommand) Execute(args []string) error {
-	utils.EnsureSudo()
-	config, err := utils.ReadConfig()
+	EnsureSudo()
+	config, err := ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	err = utils.AddExport(config.Uuid, config.Share)
+	err = AddExport(config.Uuid, config.Share)
 	if err != nil {
 		return err
 	}
 
-	utils.StartVM(config)
-	ip, err := utils.GetIP(config.Uuid)
+	StartVM(config)
+	ip, err := GetIP(config.Uuid)
 	if err != nil {
 		return err
 	}
 
-	err = utils.AddHost(config.Hostname, ip)
+	err = AddHost(config.Hostname, ip)
 	if err != nil {
 		return err
 	}
 
-	return utils.Proxy(ip)
+	return Proxy(ip)
 }
 
 func init() {

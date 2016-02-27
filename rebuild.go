@@ -1,24 +1,20 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type RebuildCommand struct {
 	Disk   int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
 	SSHKey string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
 }
 
 func (c *RebuildCommand) Execute(args []string) error {
-	steps := utils.Steps{
+	steps := Steps{
 		{
 			"Rebuilding disk image",
 			func() error {
-				return utils.CreateDisk(c.SSHKey, c.Disk)
+				return CreateDisk(c.SSHKey, c.Disk)
 			},
 		},
 	}
-	return utils.Spin(steps)
+	return Spin(steps)
 }
 
 func init() {

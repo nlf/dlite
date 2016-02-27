@@ -2,19 +2,17 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/nlf/dlite/utils"
 )
 
 type IPCommand struct{}
 
 func (c *IPCommand) Execute(args []string) error {
-	config, err := utils.ReadConfig()
+	config, err := ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	ip, err := utils.GetIP(config.Uuid)
+	ip, err := GetIP(config.Uuid)
 	if err != nil {
 		return err
 	}

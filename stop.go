@@ -1,13 +1,9 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type StopCommand struct{}
 
 func (c *StopCommand) Execute(args []string) error {
-	return utils.StopAgent()
+	return StopAgent()
 }
 
 func init() {

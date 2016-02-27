@@ -1,13 +1,9 @@
 package main
 
-import (
-	"github.com/nlf/dlite/utils"
-)
-
 type StartCommand struct{}
 
 func (c *StartCommand) Execute(args []string) error {
-	return utils.StartAgent()
+	return StartAgent()
 }
 
 func init() {

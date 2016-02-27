@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nlf/dlite/utils"
 	"github.com/satori/go.uuid"
 )
 
@@ -21,7 +20,7 @@ type InstallCommand struct {
 }
 
 func (c *InstallCommand) Execute(args []string) error {
-	utils.EnsureSudo()
+	EnsureSudo()
 
 	fmt.Println("The install command will make the following changes to your system:")
 	fmt.Println("- Create a '.dlite' directory in your home")
@@ -51,42 +50,42 @@ func (c *InstallCommand) Execute(args []string) error {
 		return fmt.Errorf("Aborted install due to invalid user input")
 	}
 
-	steps := utils.Steps{
+	steps := Steps{
 		{
 			"Building disk image",
 			func() error {
 				// clean up but ignore errors since it's possible things weren't installed
-				utils.StopAgent()
-				utils.RemoveAgent()
-				utils.RemoveHost()
-				utils.RemoveDir()
+				StopAgent()
+				RemoveAgent()
+				RemoveHost()
+				RemoveDir()
 
-				err := utils.CreateDir()
+				err := CreateDir()
 				if err != nil {
 					return err
 				}
 
-				return utils.CreateDisk(c.SSHKey, c.Disk)
+				return CreateDisk(c.SSHKey, c.Disk)
 			},
 		},
 		{
 			"Downloading OS",
 			func() error {
 				if c.Version == "" {
-					latest, err := utils.GetLatestOSVersion()
+					latest, err := GetLatestOSVersion()
 					if err != nil {
 						return err
 					}
 					c.Version = latest
 				}
-				return utils.DownloadOS(c.Version)
+				return DownloadOS(c.Version)
 			},
 		},
 		{
 			"Writing configuration",
 			func() error {
 				uuid := uuid.NewV1().String()
-				return utils.SaveConfig(utils.Config{
+				return SaveConfig(Config{
 					Uuid:     uuid,
 					CpuCount: c.Cpus,
 					Memory:   c.Memory,
@@ -98,17 +97,17 @@ func (c *InstallCommand) Execute(args []string) error {
 		{
 			"Creating launchd agent",
 			func() error {
-				err := utils.AddSudoer()
+				err := AddSudoer()
 				if err != nil {
 					return err
 				}
 
-				return utils.CreateAgent()
+				return CreateAgent()
 			},
 		},
 	}
 
-	return utils.Spin(steps)
+	return Spin(steps)
 }
 
 func init() {
