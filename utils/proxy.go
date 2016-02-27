@@ -27,9 +27,9 @@ func Proxy(ip string) error {
 		return err
 	}
 
-	handler := http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Scheme = "http"
-		r.URL.Host = ip+":2375"
+		r.URL.Host = ip + ":2375"
 
 		upgrade := false
 		if strings.HasSuffix(r.URL.Path, "/attach") {
