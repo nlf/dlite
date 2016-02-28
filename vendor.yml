@@ -1,0 +1,25 @@
+vendors:
+- path: github.com/DHowett/go-plist
+  rev: a34fbb33e60256707d230f730e60f75946fd2d7c
+- path: github.com/briandowns/spinner
+  rev: 9cebd3c71a8ef3024905d1b2e3388c8f7ff436cd
+- path: github.com/fatih/color
+  rev: 4f7bcef27eec7925456d0c30c5e7b0408b3339be
+- path: github.com/jessevdk/go-flags
+  rev: 6b9493b3cb60367edd942144879646604089e3f7
+- path: github.com/johanneswuerbach/nfsexports
+  rev: a9068f3f0daa39616953aec11c3eb1209ebc4086
+- path: github.com/kardianos/osext
+  rev: 29ae4ffbc9a6fe9fb2bc5029050ce6996ea1d3bc
+- path: github.com/mattn/go-colorable
+  rev: 9cbef7c35391cca05f15f8181dc0b18bc9736dbb
+- path: github.com/mattn/go-isatty
+  rev: 56b76bdf51f7708750eac80fa38b952bb9f32639
+- path: github.com/nlf/libxhyve
+  rev: c07abbb36cf08a848e3c615022a0f0bbb27ad61e
+- path: github.com/ricochet2200/go-disk-usage
+  rev: f0d1b743428fc09792f93233d9412f89f88fa2ab
+- path: github.com/satori/go.uuid
+  rev: e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502
+- path: golang.org/x/sys
+  rev: 19ced1583f732e8ff9d7d84de773dc621557df99
