@@ -1,8 +1,7 @@
 package main
 
 type RebuildCommand struct {
-	Disk   int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
-	SSHKey string `short:"s" long:"ssh-key" description:"path to public ssh key" default:"$HOME/.ssh/id_rsa.pub"`
+	Disk int `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
 }
 
 func (c *RebuildCommand) Execute(args []string) error {
@@ -10,7 +9,7 @@ func (c *RebuildCommand) Execute(args []string) error {
 		{
 			"Rebuilding disk image",
 			func() error {
-				return CreateDisk(c.SSHKey, c.Disk)
+				return CreateDisk(c.Disk)
 			},
 		},
 	}

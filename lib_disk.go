@@ -1,17 +1,29 @@
 package main
 
 import (
-	"archive/tar"
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"os/user"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/DHowett/go-plist"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
+
+type Device struct {
+	DevEntry string `plist:"dev-entry"`
+}
+
+type Image struct {
+	ImagePath string   `plist:"image-path"`
+	Devices   []Device `plist:"system-entities"`
+}
+
+type HDIInfo struct {
+	Images []Image `plist:"images"`
+}
 
 func changePermissions(path string) error {
 	var uid, gid int
@@ -56,81 +68,73 @@ func RemoveDir() error {
 	return os.RemoveAll(path)
 }
 
-func CreateDisk(sshKey string, size int) error {
-	if strings.Contains(sshKey, "$HOME") {
-		username := os.Getenv("SUDO_USER")
-		if username == "" {
-			username = os.Getenv("USER")
-		}
-
-		me, err := user.Lookup(username)
-		if err != nil {
-			return err
-		}
-
-		sshKey = strings.Replace(sshKey, "$HOME", me.HomeDir, -1)
+func GetDiskPath() (string, error) {
+	pl, err := exec.Command("hdiutil", "info", "-plist").Output()
+	if err != nil {
+		return "", err
 	}
 
+	var results HDIInfo
+	_, err = plist.Unmarshal(pl, &results)
+	if err != nil {
+		return "", err
+	}
+
+	for _, image := range results.Images {
+		if image.ImagePath == os.ExpandEnv("$HOME/.dlite/disk.sparseimage") {
+			for _, device := range image.Devices {
+				matched, err := regexp.MatchString("^/dev/disk[0-9]+$", device.DevEntry)
+				if err != nil {
+					return "", err
+				}
+
+				if matched {
+					return strings.Replace(device.DevEntry, "disk", "rdisk", 1), nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("Disk not attached")
+}
+
+func AttachDisk() (string, error) {
+	_, err := GetDiskPath()
+	if err != nil {
+		if err.Error() != "Disk not attached" {
+			return "", err
+		}
+		
+		err = exec.Command("hdiutil", "attach", "-nomount", "-noverify", "-noautofsck", os.ExpandEnv("$HOME/.dlite/disk.sparseimage")).Run()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return GetDiskPath()
+}
+
+func DetachDisk() error {
+	path, err := GetDiskPath()
+	if err != nil {
+		return err
+	}
+
+	return exec.Command("hdiutil", "detach", path).Run()
+}
+
+func CreateDisk(size int) error {
 	usage := du.NewDiskUsage(os.ExpandEnv("$HOME/.dlite"))
 	if (usage.Free() / (1024 * 1024 * 1024)) < uint64(size) {
 		return fmt.Errorf("Not enough free space to allocate a %dGiB disk image", size)
 	}
 
-	sshKey = os.ExpandEnv(sshKey)
-	keyBytes, err := ioutil.ReadFile(sshKey)
+	DetachDisk()
+	path := os.ExpandEnv("$HOME/.dlite/disk")
+	err := exec.Command("hdiutil", "create", "-size", fmt.Sprintf("%dg", size), "-type", "SPARSE", "-layout", "MBRSPUD", path).Run()
 	if err != nil {
 		return err
 	}
 
-	buffer := new(bytes.Buffer)
-	tarball := tar.NewWriter(buffer)
-	files := []struct {
-		Name string
-		Body []byte
-	}{
-		{"dhyve, please format-me", []byte("dhyve, please format-me")},
-		{".ssh/authorized_keys", keyBytes},
-	}
-
-	for _, file := range files {
-		if err = tarball.WriteHeader(&tar.Header{
-			Name: file.Name,
-			Mode: 0644,
-			Size: int64(len(file.Body)),
-		}); err != nil {
-			return err
-		}
-
-		if _, err = tarball.Write(file.Body); err != nil {
-			return err
-		}
-	}
-
-	if err = tarball.Close(); err != nil {
-		return err
-	}
-
-	path := os.ExpandEnv("$HOME/.dlite/disk.img")
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-	_, err = f.Write(buffer.Bytes())
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Seek(int64(size*1073741824-1), 0)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write([]byte{0})
-	if err != nil {
-		return err
-	}
-
-	return changePermissions(path)
+	return changePermissions(path + ".sparseimage")
 }

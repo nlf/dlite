@@ -39,6 +39,7 @@ func (s *StoppableListener) Accept() (net.Conn, error) {
 
 func (s *StoppableListener) Close() error {
 	close(s.done)
+	DetachDisk()
 	return nil
 }
 
