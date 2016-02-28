@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hooklift/xhyve"
+	"github.com/nlf/libxhyve"
 )
 
 

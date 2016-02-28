@@ -2,7 +2,7 @@
 
 package xhyve
 
-// #cgo CFLAGS: -I${SRCDIR}/include -x c -std=c11 -fno-common -arch x86_64 -DXHYVE_CONFIG_ASSERT -DVERSION=v0.2.0 -Os -fstrict-aliasing -Wno-unknown-warning-option -Wno-reserved-id-macro -pedantic -fmessage-length=152 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0
+// #cgo CFLAGS: -I${SRCDIR}/include -x c -std=c11 -fno-common -arch x86_64 -DXHYVE_CONFIG_ASSERT -DVERSION=v0.2.0 -Os -fstrict-aliasing -Wno-unknown-warning-option -Wno-reserved-id-macro -pedantic -fmessage-length=152 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -Wno-gnu-zero-variadic-macro-arguments
 // #cgo LDFLAGS: -L${SRCDIR} -arch x86_64 -framework Hypervisor -framework vmnet
 // #include <xhyve/xhyve.h>
 // #include <xhyve/mevent.h>

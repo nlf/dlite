@@ -66,6 +66,8 @@ go get github.com/briandowns/spinner
 * Prefix or append text
 * Change spinner color
 * Get spinner status
+* Chain, pipe, redirect output
+* Output final string on spinner/indicator completion
 
 ## Examples
 
@@ -78,7 +80,7 @@ import (
 )
 
 func main() {
-	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond) // Build our new spinner
+	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)  // Build our new spinner
 	s.Start()                                                    // Start the spinner
 	time.Sleep(4 * time.Second)                                  // Run for some time to simulate work
 	s.Stop()
@@ -145,4 +147,48 @@ s := spinner.New(setOfDigits, 100*time.Millisecond)
 
 ```Go
 fmt.Println(s.ST)
+```
+
+## Unix pipe and redirect
+
+Feature suggested and write up by [dekz](https://github.com/dekz)
+
+Setting the Spinner Writer to Stderr helps show progress to the user, with the enhancement to chain, pipe or redirect the output.
+
+```go
+s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+s.Suffix = " Encrypting data..."
+s.Writer = os.Stderr
+s.Start()
+// Encrypt the data into ciphertext
+fmt.Println(os.Stdout, ciphertext)
+```
+
+```sh
+> myprog encrypt "Secret text" > encrypted.txt
+⣯ Encrypting data...
+```
+
+```sh
+> cat encrypted.txt
+1243hjkbas23i9ah27sj39jghv237n2oa93hg83
+```
+
+## Final String Output
+
+Add additional output when the spinner/indicator has completed. The "final" output string can be multi-lined and will be written to wherever the `io.Writer` has been configured for.
+
+```Go
+s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+s.FinalMSG = "Complete!\nNew line!\nAnother one!\n"
+s.Start()                 
+time.Sleep(4 * time.Second)
+s.Stop()                   
+```
+
+Output
+```sh
+Complete!
+New line!
+Another one!
 ```
