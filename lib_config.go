@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 )
@@ -11,7 +12,6 @@ type Config struct {
 	DiskSize      int    `json:"disk_size"`
 	Memory        int    `json:"memory"`
 	Hostname      string `json:"hostname"`
-	Share         string `json:"share"`
 	DNSServer     string `json:"dns_server"`
 	Extra         string `json:"extra"`
 	DockerVersion string `json:"docker_version"`
@@ -31,7 +31,14 @@ func SaveConfig(config Config) error {
 		return err
 	}
 
-	output.Write(b)
+	var pretty bytes.Buffer
+	json.Indent(&pretty, b, "", "  ")
+
+	_, err = pretty.WriteTo(output)
+	if err != nil {
+		return err
+	}
+
 	return changePermissions(path)
 }
 
