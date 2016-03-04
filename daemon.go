@@ -1,9 +1,22 @@
 package main
 
+import (
+	"os"
+	"os/signal"
+)
+
 type DaemonCommand struct{}
 
 func (c *DaemonCommand) Execute(args []string) error {
 	EnsureSudo()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, os.Kill)
+	go func() {
+		<- shutdown
+		ShutdownVM()
+	}()
+
 	config, err := ReadConfig()
 	if err != nil {
 		return err
@@ -16,6 +29,11 @@ func (c *DaemonCommand) Execute(args []string) error {
 	}
 
 	err = AddHost(config.Hostname, ip)
+	if err != nil {
+		return err
+	}
+
+	err = AddSSHConfig(config.Hostname, ip)
 	if err != nil {
 		return err
 	}

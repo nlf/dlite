@@ -26,13 +26,14 @@ func (c *InstallCommand) Execute(args []string) error {
 
 	fmt.Println("The install command will make the following changes to your system:")
 	fmt.Println("- Create a '.dlite' directory in your home")
-	fmt.Printf("- Create a %dGB sparse disk image in the '.dlite' directory\n", c.Disk)
+	fmt.Printf("- Create a %d GiB sparse disk image in the '.dlite' directory\n", c.Disk)
 	if c.Version == "" {
 		fmt.Println("- Download the latest version of DhyveOS to the '.dlite' directory")
 	} else {
 		fmt.Printf("- Download version %s of DhyveOS to the '.dlite' directory\n", c.Version)
 	}
 	fmt.Println("- Create a 'config.json' file in the '.dlite' directory")
+	fmt.Println("- Create a new SSH key pair in the '.dlite' directory for the vm")
 	fmt.Println("- Add a line to your sudoers file to allow running the 'dlite' binary without a password")
 	fmt.Println("- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon")
 	fmt.Println("- Store logs from the daemon in '~/Library/Logs'")
@@ -82,6 +83,12 @@ func (c *InstallCommand) Execute(args []string) error {
 					c.Version = latest
 				}
 				return DownloadOS(c.Version)
+			},
+		},
+		{
+			"Generating SSH key",
+			func() error {
+				return GenerateSSHKey()
 			},
 		},
 		{

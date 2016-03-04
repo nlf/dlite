@@ -10,7 +10,7 @@ func (c *UninstallCommand) Execute(args []string) error {
 			func() error {
 				StopAgent()
 				RemoveHost()
-				RemoveExport()
+				RemoveSSHConfig()
 				return RemoveAgent()
 			},
 		},
