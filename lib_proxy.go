@@ -39,7 +39,6 @@ func (s *StoppableListener) Accept() (net.Conn, error) {
 
 func (s *StoppableListener) Close() error {
 	close(s.done)
-	DetachDisk()
 	return nil
 }
 
@@ -94,32 +93,37 @@ func Proxy(ip string, done chan error) error {
 				return
 			}
 
-			defer conn.Close()
-
-			backend, err := net.Dial("tcp", ip+":2375")
+			addr, err := net.ResolveTCPAddr("tcp", ip+":2375")
 			if err != nil {
 				w.WriteHeader(http.StatusServiceUnavailable)
 				return
 			}
 
+			backend, err := net.DialTCP("tcp", nil, addr)
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			finished := make(chan error, 1)
+
+			go func() {
+				_, err := io.Copy(conn, backend)
+				conn.Close()
+				finished <- err
+			}()
+
+			go func() {
+				_, err := io.Copy(backend, conn)
+				backend.CloseWrite()
+				finished <- err
+			}()
+
+			r.Write(backend)
+			defer r.Body.Close()
 			defer backend.Close()
 
-			err = r.Write(backend)
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			finished := make(chan bool, 1)
-			go func() {
-				io.Copy(backend, conn)
-			}()
-
-			go func() {
-				io.Copy(conn, backend)
-				finished <- true
-			}()
-
+			<-finished
 			<-finished
 		} else {
 			resp, err := http.DefaultTransport.RoundTrip(r)
