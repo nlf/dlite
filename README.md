@@ -168,6 +168,8 @@ DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OS
 
 Xhyve, and therefore DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the *full size* of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
 
+There is an open issue with Xhyve (https://github.com/mist64/xhyve/issues/86) that causes OSX to crash when waking after a long sleep.
+
 DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
 
 DLite is most definitely *not* recommended for any kind of production use.
