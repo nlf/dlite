@@ -10,6 +10,26 @@ import (
 	"strings"
 )
 
+func GetLatestDockerVersion() (string, error) {
+	resp, err := http.Get("https://api.github.com/repos/docker/docker/releases/latest")
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	var latest struct {
+		Tag string `json:"tag_name"`
+	}
+
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&latest)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimPrefix(latest.Tag, "v"), nil
+}
+
 func GetLatestOSVersion() (string, error) {
 	resp, err := http.Get("https://api.github.com/repos/nlf/dhyve-os/releases/latest")
 	if err != nil {

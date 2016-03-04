@@ -4,18 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/satori/go.uuid"
 )
 
 type InstallCommand struct {
-	Cpus     int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default:"1"`
-	Disk     int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
-	Memory   int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"2"`
-	Version  string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
-	Hostname string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
-	Share    string `short:"S" long:"share" description:"directory to export from NFS" default:"/Users"`
+	Cpus          int    `short:"c" long:"cpus" description:"number of CPUs to allocate" default-mask:"# of CPUs"`
+	Disk          int    `short:"d" long:"disk" description:"size of disk in GiB to create" default:"20"`
+	DNSServer     string `short:"s" long:"dns-server" description:"DNS server to use in the vm" default:"192.168.64.1"`
+	DockerVersion string `short:"D" long:"docker-version" description:"version of Docker to install"`
+	Extra         string `short:"e" long:"extra" description:"extra arguments to pass to Docker"`
+	Hostname      string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
+	Memory        int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"2"`
+	Version       string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
 }
 
 func (c *InstallCommand) Execute(args []string) error {
@@ -23,7 +26,7 @@ func (c *InstallCommand) Execute(args []string) error {
 
 	fmt.Println("The install command will make the following changes to your system:")
 	fmt.Println("- Create a '.dlite' directory in your home")
-	fmt.Printf("- Create a %dGB disk image in the '.dlite' directory\n", c.Disk)
+	fmt.Printf("- Create a %dGB sparse disk image in the '.dlite' directory\n", c.Disk)
 	if c.Version == "" {
 		fmt.Println("- Download the latest version of DhyveOS to the '.dlite' directory")
 	} else {
@@ -84,13 +87,26 @@ func (c *InstallCommand) Execute(args []string) error {
 		{
 			"Writing configuration",
 			func() error {
+				if c.DockerVersion == "" {
+					latest, err := GetLatestDockerVersion()
+					if err != nil {
+						return err
+					}
+					c.DockerVersion = latest
+				}
+				if c.Cpus == 0 {
+					c.Cpus = runtime.NumCPU()
+				}
 				uuid := uuid.NewV1().String()
 				return SaveConfig(Config{
-					Uuid:     uuid,
-					CpuCount: c.Cpus,
-					Memory:   c.Memory,
-					Hostname: c.Hostname,
-					Share:    c.Share,
+					Uuid:          uuid,
+					CpuCount:      c.Cpus,
+					Memory:        c.Memory,
+					Hostname:      c.Hostname,
+					DockerVersion: c.DockerVersion,
+					Extra:         c.Extra,
+					DNSServer:     c.DNSServer,
+					DiskSize:      c.Disk,
 				})
 			},
 		},

@@ -104,7 +104,7 @@ func AttachDisk() (string, error) {
 		if err.Error() != "Disk not attached" {
 			return "", err
 		}
-		
+
 		err = exec.Command("hdiutil", "attach", "-nomount", "-noverify", "-noautofsck", os.ExpandEnv("$HOME/.dlite/disk.sparseimage")).Run()
 		if err != nil {
 			return "", err
@@ -120,7 +120,7 @@ func DetachDisk() error {
 		return err
 	}
 
-	return exec.Command("hdiutil", "detach", path).Run()
+	return exec.Command("hdiutil", "detach", strings.Replace(path, "rdisk", "disk", 1)).Run()
 }
 
 func CreateDisk(size int) error {
@@ -131,7 +131,12 @@ func CreateDisk(size int) error {
 
 	DetachDisk()
 	path := os.ExpandEnv("$HOME/.dlite/disk")
-	err := exec.Command("hdiutil", "create", "-size", fmt.Sprintf("%dg", size), "-type", "SPARSE", "-layout", "MBRSPUD", path).Run()
+	err := os.RemoveAll(path + ".sparseimage")
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("hdiutil", "create", "-size", fmt.Sprintf("%dg", size), "-type", "SPARSE", "-layout", "MBRSPUD", path).Run()
 	if err != nil {
 		return err
 	}

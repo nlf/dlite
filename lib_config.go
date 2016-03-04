@@ -6,11 +6,15 @@ import (
 )
 
 type Config struct {
-	Uuid     string `json:"uuid"`
-	CpuCount int    `json:"cpu_count"`
-	Memory   int    `json:"memory"`
-	Hostname string `json:"hostname"`
-	Share    string `json:"share"`
+	Uuid          string `json:"uuid"`
+	CpuCount      int    `json:"cpu_count"`
+	DiskSize      int    `json:"disk_size"`
+	Memory        int    `json:"memory"`
+	Hostname      string `json:"hostname"`
+	Share         string `json:"share"`
+	DNSServer     string `json:"dns_server"`
+	Extra         string `json:"extra"`
+	DockerVersion string `json:"docker_version"`
 }
 
 func SaveConfig(config Config) error {

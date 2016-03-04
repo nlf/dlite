@@ -9,11 +9,6 @@ func (c *DaemonCommand) Execute(args []string) error {
 		return err
 	}
 
-	err = AddExport(config.Uuid, config.Share)
-	if err != nil {
-		return err
-	}
-
 	done := StartVM(config)
 	ip, err := GetIP(config.Uuid)
 	if err != nil {
