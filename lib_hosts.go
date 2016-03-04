@@ -1,15 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"regexp"
-	"strings"
 	"time"
-
-	"github.com/johanneswuerbach/nfsexports"
 )
 
 type result struct {
@@ -68,113 +65,56 @@ func GetIP(uuid string) (string, error) {
 }
 
 func AddHost(hostname, ip string) error {
-	if hostname == "" {
-		hostname = "local.docker"
-	}
-
-	ipRe := regexp.MustCompile(`.*# added by dlite$`)
-	ipLine := ip + " " + hostname + " # added by dlite"
-
-	file, err := os.OpenFile("/etc/hosts", os.O_RDWR, 0644)
+	path := "/etc/hosts"
+	hosts, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
+	startMarker := []byte("# begin dlite")
+	endMarker := []byte("# end dlite\n")
 
-	hosts, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
+	begin := bytes.Index(hosts, startMarker)
+	end := bytes.Index(hosts, endMarker)
+
+	var temp []byte
+	if begin > -1 && end > -1 {
+		temp = append(hosts[:begin], hosts[end + len(endMarker):]...)
+		temp = append(bytes.TrimSpace(temp), '\n')
+	} else {
+		temp = hosts
 	}
 
-	lines := strings.Split(string(hosts), "\n")
-	added := false
-	for i, line := range lines {
-		if ipRe.MatchString(line) {
-			lines[i] = ipLine
-			added = true
-			break
-		}
+	if len(temp) > 0 && !bytes.HasSuffix(temp, []byte("\n")) {
+		temp = append(temp, []byte("\n")...)
 	}
 
-	if !added {
-		lines = append(lines, ipLine)
-	}
-
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write([]byte(strings.Join(lines, "\n") + "\n"))
-	return err
+	entry := fmt.Sprintf("# begin dlite\n%s %s\n# end dlite\n", ip, hostname)
+	temp = append(temp, []byte(entry)...)
+	return ioutil.WriteFile(path, temp, 0644)
 }
 
 func RemoveHost() error {
-	ipRe := regexp.MustCompile(`.*# added by dlite$`)
-
-	file, err := os.OpenFile("/etc/hosts", os.O_RDWR, 0644)
+	path := "/etc/hosts"
+	hosts, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
+	startMarker := []byte("# begin dlite")
+	endMarker := []byte("# end dlite\n")
 
-	hosts, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
+	begin := bytes.Index(hosts, startMarker)
+	end := bytes.Index(hosts, endMarker)
+
+	if begin == -1 && end == -1 {
+		return nil
 	}
 
-	lines := strings.Split(string(hosts), "\n")
-	for i, line := range lines {
-		if ipRe.MatchString(line) {
-			lines = append(lines[:i], lines[i+1:]...)
-			break
-		}
+	temp := append(hosts[:begin], hosts[end + len(endMarker):]...)
+	temp = append(bytes.TrimSpace(temp), '\n')
+	if len(temp) > 0 && !bytes.HasSuffix(temp, []byte("\n")) {
+		temp = append(temp, []byte("\n")...)
 	}
-
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	n, err := file.Write([]byte(strings.Join(lines, "\n")))
-	if err != nil {
-		return err
-	}
-
-	return file.Truncate(int64(n))
-}
-
-func AddExport(uuid, share string) error {
-	if share == "" {
-		share = "/Users"
-	}
-
-	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -maproot=root:wheel", share)
-	_, err := nfsexports.Add("", "dlite", export)
-	if err != nil {
-		return err
-	}
-
-	err = nfsexports.ReloadDaemon()
-	if err != nil {
-		return exec.Command("sudo", "nfsd", "start").Run()
-	}
-
-	return err
-}
-
-func RemoveExport() error {
-	_, err := nfsexports.Remove("", "dlite")
-	if err != nil {
-		return err
-	}
-
-	err = nfsexports.ReloadDaemon()
-	if err != nil {
-		return exec.Command("sudo", "nfsd", "start").Run()
-	}
-
-	return err
+	return ioutil.WriteFile(path, temp, 0644)
 }
