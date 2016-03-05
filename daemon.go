@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 type DaemonCommand struct{}
@@ -11,7 +12,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 	EnsureSudo()
 
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, os.Kill)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM, os.Kill)
 	go func() {
 		<- shutdown
 		ShutdownVM()
