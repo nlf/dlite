@@ -14,9 +14,9 @@ func GenerateSSHKey() error {
 		os.RemoveAll(path)
 		os.RemoveAll(path + ".pub")
 	}
-	output, err := exec.Command("ssh-keygen", "-t", "RSA", "-b", "4096", "-C", "dlite", "-f", path, "-N", "").CombinedOutput()
+
+	err := exec.Command("ssh-keygen", "-t", "RSA", "-b", "4096", "-C", "dlite", "-f", path, "-N", "").Run()
 	if err != nil {
-		fmt.Println(string(output))
 		return err
 	}
 
