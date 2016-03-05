@@ -1,29 +1,23 @@
-#DLite
+# DLite
+The simplest way to use Docker on OSX.
 
-The simplest way to use Docker on OSX. [![Build Status](https://travis-ci.org/nlf/dlite.svg?branch=master)](https://travis-ci.org/nlf/dlite)
-
-##Thanks
-
-DLite leverages [xhyve](https://github.com/mist64/xhyve) through the [libxhyve](https://github.com/TheNewNormal/libxhyve) Go bindings for virtualization. Without these projects and the people behind them, this project wouldn't exist.
+[![build status][travis-image]][travis-url]
 
 ## Installation
-
-There are several ways to install dlite. You may install it with [Homebrew](http://brew.sh/), download it from github or compile it yourself.
+There are several ways to install DLite. You may install it with [Homebrew](http://brew.sh/), download it from github or compile it yourself.
 
 ### Download
+- Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, or
+- Install it with homebrew: `brew install dlite`, or
+- If you have a working [Go development environment](https://golang.org/doc/install) you can build DLite from source by running:
 
-1. Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, or
-2. Install it with homebrew: `brew install dlite`
-3. If you have a working [Go development environment](https://golang.org/doc/install) you can build dlite from source by running:
+  ```
+  go get github.com/nlf/dlite
+  ```
 
-    ```
-    go get github.com/nlf/dlite
-    ```
-
-    After that you need to compile it (run `make dlite` in the `src/github.com/nlf/dlite` dir.)
+  After that you need to compile it (run `make dlite` in the `src/github.com/nlf/dlite` dir.)
 
 ### Initialization
-
 To create the necessary files and a launchd agent which manages the process, simply run
 
 ```
@@ -40,16 +34,14 @@ dlite start
 
 DLite will start automatically upon logging in as well.
 
-##Updating DLite
-
+## Updating DLite
 The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
 
 To install the updated binary with Homebrew simply run `brew upgrade dlite`.
 
-If you update dlite, you probably want to update your VM as well:
+If you update DLite, you probably want to update your VM as well:
 
-##Updating your VM
-
+## Updating your VM
 It's possible to update your virtual machine without having to rebuild it entirely. To do so, run the following commands
 
 ```
@@ -58,8 +50,7 @@ dlite update
 dlite start
 ```
 
-##Usage
-
+## Usage
 Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
 
 When opening ports in your docker containers, connect to `local.docker` instead of `localhost`. Everything else should just work™
@@ -69,7 +60,6 @@ Note that the `local.docker` hostname is configurable by passing the `-n` flag t
 If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` should do the trick.
 
 ## Seamless routing
-
 By default, Docker creates a virtual interface named `docker0` on the host machine that forwards packets between any other network interface.
 
 However, on OSX, this means you are not able to access the Docker network directly. To be able to do so, you need add a route and allow traffic from any host on the interface that connects to the VM.
@@ -92,7 +82,6 @@ docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1)
 For now, you may include this on a profile script if desired in case you need to repeat the same steps. Unless you reboot your OSX machine, you shouldn't need to run this often.
 
 ### Service Discovery via DNS
-
 Now that you've got transparent routing to your Docker containers, it is time to improve their accessibility by using a DNS server.
 
 First, let's start by configuring the default Docker service DNS server to IP where the DNS server will run (`172.17.42.1`). Currently, this requires SSH'ing into the VM and editing `/etc/default/docker`, but this likely to change in the [future](https://github.com/nlf/dlite/issues/90).
@@ -145,31 +134,45 @@ You should see a Docker network IP resolved correctly:
 
 ```
 ;; ANSWER SECTION:
-<image>.docker.	0	IN	A	172.17.42.3
+<image>.docker.    0    IN    A    172.17.42.3
 ```
 
 #### Troubleshooting DNS
-
 It usually takes some time to adapt to the DNS naming scheme of `dnsdock`, so if you'd like see which DNS names are being registered in real time, just follow the `dnsdock` logs:
 
 `docker logs --follow dnsdock`
 
-##Troubleshooting
-
+## Troubleshooting
+### Conflicting nfs exports
 A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again. Note that dlite adds its export when it is started, not when it is installed, so make sure to either clean your exports file or specify a shared directory that doesn't conflict with existing shares when you install.
 
+### Unresponsive `docker` cli
 If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite`. Save the hosts file and run `dlite start` and try again.
 
+#### Tmux sessions
 Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
 
-##Caveats
+## Caveats
+### Hypervisor framework
+DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer. You also need a fairly recent mac. You can tell if your computer is new enough by running `sysctl kern.hv_support` in a terminal. If you see `kern.hv_support: 1` as a response, you're good to go. If not, unfortunately your computer is too old to leverage the Hypervisor framework and DLite won't work for you.
 
-DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer. You also need a fairly recent mac. You can tell if your computer is new enough by running `sysctl kern.hv_support` in a terminal. If you see `kern.hv_support: 1` as a response, you're good to go. If not, unfortunately your computer is too old to leverage the hypervisor framework and DLite won't work for you.
+### Sparse disk images
+Xhyve, and therefore DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the _full size_ of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
 
-Xhyve, and therefore DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the *full size* of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
+### Crash when waking after long sleep
+There is an open issue with Xhyve ([https://github.com/mist64/xhyve/issues/86](https://github.com/mist64/xhyve/issues/86)) that causes OSX to crash when waking after a long sleep.
 
-There is an open issue with Xhyve (https://github.com/mist64/xhyve/issues/86) that causes OSX to crash when waking after a long sleep.
+### TLS
+DLite is _not_ secured via TLS. If that's important to you for local development, look elsewhere.
 
-DLite is *not* secured via TLS. If that's important to you for local development, look elsewhere.
+### Production usage
+DLite is most definitely _not_ recommended for any kind of production use.
 
-DLite is most definitely *not* recommended for any kind of production use.
+## Acknowledgements
+DLite leverages [xhyve](https://github.com/mist64/xhyve) through the [libxhyve](https://github.com/TheNewNormal/libxhyve) Go bindings for virtualization. Without these projects and the people behind them, this project wouldn't exist.
+
+## License
+MIT
+
+[travis-image]: https://img.shields.io/travis/nlf/dlite.svg?style=flat-square
+[travis-url]: https://travis-ci.org/nlf/dlite
