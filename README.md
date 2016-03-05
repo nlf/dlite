@@ -69,6 +69,8 @@ You can find the IP of an individual container by running `docker inspect -f '{{
 ### Service Discovery via DNS
 If you wish to use DNS records to improve your containers accessibility, you can easily do so by leveraging the [dnsdock](https://github.com/tonistiigi/dnsdock) container.
 
+Note that doing so, however, will cause docker to ignore any DNS server you configured in DLite. If you use a non-standard DNS server, add `-nameserver="8.8.8.8:53"` to the very end of the command below, replacing `8.8.8.8` with your desired DNS server.
+
 First, run the dnsdock service:
 
 ```sh
