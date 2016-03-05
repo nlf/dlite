@@ -101,9 +101,13 @@ func StartAgent() error {
 }
 
 func AgentRunning() bool {
-	list, err := exec.Command("sudo", "-u", os.ExpandEnv("$SUDO_USER"), "launchctl", "list", "local.dlite").Output()
-	if err != nil {
-		return false
+	var list []byte
+	var err error
+
+	if os.ExpandEnv("$SUDO_USER") != "" {
+		list, err = exec.Command("sudo", "-u", os.ExpandEnv("$SUDO_USER"), "launchctl", "list", "local.dlite").Output()
+	} else {
+		list, err = exec.Command("launchctl", "list", "local.dlite").Output()
 	}
 
 	if bytes.Contains(list, []byte("Could not find service")) {
