@@ -77,10 +77,11 @@ docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock --rest
 
 Next, edit your config file for DLite via `dlite config`. Set the value of the `"extra"` option to `"--bip=172.17.0.1/24 --dns=172.17.0.1"` and exit your editor.
 
-Lastly, configure OSX so that all `.docker` requests are forwarded to Docker's DNS server. Since routing has already been taken care of, just create a custom resolver under `/etc/resolver/docker` with the following content:
+Lastly, configure OSX so that all `.docker` requests are forwarded to Docker's DNS server. Since routing has already been taken care of, just create a custom resolver:
 
-```
-nameserver 172.17.0.1
+```sh
+sudo mkdir -p /etc/resolver
+echo "nameserver 172.17.0.1" | sudo tee /etc/resolver/docker
 ```
 
 Then restart OSX's own DNS server:
@@ -110,6 +111,9 @@ It usually takes some time to adapt to the DNS naming scheme of `dnsdock`, so if
 ## Troubleshooting
 ### Unresponsive `docker` cli
 If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite` or are surrounded by `# begin dlite` and `# end dlite` comments. Save the hosts file and run `dlite start` and try again.
+
+### Accessing the terminal
+If your virtual machine is misbehaving and you're unable to SSH to it, you can use the psuedo terminal that is allocated to the machine by running `screen /dev/ttys000`. Log in with the username `root` and the password `dhyve` and you can then perform some basic troubleshooting from there.
 
 #### Tmux sessions
 Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
