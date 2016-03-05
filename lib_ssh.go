@@ -14,7 +14,7 @@ func GenerateSSHKey() error {
 		os.RemoveAll(path)
 		os.RemoveAll(path+".pub")
 	}
-	output, err := exec.Command("ssh-keygen", "-t", "RSA", "-b", "4096", "-f", path, "-N", "").CombinedOutput()
+	output, err := exec.Command("ssh-keygen", "-t", "RSA", "-b", "4096", "-C", "dlite", "-f", path, "-N", "").CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
 		return err
@@ -91,5 +91,10 @@ func RemoveSSHConfig() error {
 }
 
 func ShutdownVM() error {
-	return exec.Command("sudo", "-u", os.ExpandEnv("$SUDO_USER"), "ssh", "local.docker", "sudo", "/sbin/halt").Run()
+	config, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	return exec.Command("sudo", "-u", os.ExpandEnv("$SUDO_USER"), "ssh", config.Hostname, "sudo", "/sbin/halt").Run()
 }
