@@ -15,6 +15,7 @@ type Config struct {
 	DNSServer     string `json:"dns_server"`
 	Extra         string `json:"extra"`
 	DockerVersion string `json:"docker_version"`
+	Route         bool   `json:"route"`
 }
 
 func SaveConfig(config Config) error {

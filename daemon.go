@@ -14,7 +14,7 @@ func (c *DaemonCommand) Execute(args []string) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM, os.Kill)
 	go func() {
-		<- shutdown
+		<-shutdown
 		ShutdownVM()
 	}()
 
@@ -37,6 +37,13 @@ func (c *DaemonCommand) Execute(args []string) error {
 	err = AddSSHConfig(config.Hostname, ip)
 	if err != nil {
 		return err
+	}
+
+	if config.Route {
+		err := AddRoute(config)
+		if err != nil {
+			return err
+		}
 	}
 
 	return Proxy(ip, done)

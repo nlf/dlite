@@ -19,6 +19,7 @@ type InstallCommand struct {
 	Hostname      string `short:"n" long:"hostname" description:"hostname to use for vm" default:"local.docker"`
 	Memory        int    `short:"m" long:"memory" description:"amount of memory in GiB to allocate" default:"2"`
 	Version       string `short:"v" long:"os-version" description:"version of DhyveOS to install"`
+	Route         bool   `short:"r" long:"route" description:"add routing entries to allow direct connections to containers" default:"false"`
 }
 
 func (c *InstallCommand) Execute(args []string) error {
@@ -122,6 +123,7 @@ func (c *InstallCommand) Execute(args []string) error {
 					Extra:         c.Extra,
 					DNSServer:     c.DNSServer,
 					DiskSize:      c.Disk,
+					Route:         c.Route,
 				})
 			},
 		},
