@@ -60,59 +60,27 @@ Note that the `local.docker` hostname is configurable by passing the `-n` flag t
 If you need to SSH to the VM for whatever reason, `ssh docker@local.docker` should do the trick.
 
 ## Seamless routing
-By default, Docker creates a virtual interface named `docker0` on the host machine that forwards packets between any other network interface.
+By passing the `-r` or `--route` flag to the install command, or editing your config file to set `"route": true`, DLite will set up routing tables to allow you to directly access your containers on the 172.17.0.0/16 network.
 
-However, on OSX, this means you are not able to access the Docker network directly. To be able to do so, you need add a route and allow traffic from any host on the interface that connects to the VM.
+Some events cause OSX to clear the routing table. If you find you're unable to reach your containers, run the `dlite route` command to readd the routing entries.
 
-Run the following commands on your OSX machine:
-
-```sh
-sudo route -n add 172.17.0.0/16 local.docker; DOCKER_INTERFACE=$(route get local.docker | grep interface: | cut -f 2 -d: | tr -d ' '); for interface in $(ifconfig ${DOCKER_INTERFACE} | grep member: | cut -f 2 -d: | cut -c 2-4); do sudo ifconfig bridge100 -hostfilter $interface 2> /dev/null; ping -q -c2 -t2 $(docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1)) > /dev/null; if [ $? -eq 0 ]; then echo; echo "Interface $interface configured"; break; fi; done
-```
-
-See if it works by pinging the IP of any running container (assuming you have at least one):
-
-```sh
-ping -c5 $(docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1))
-```
-
-For now, you may include this on a profile script if desired in case you need to repeat the same steps. Unless you reboot your OSX machine, you shouldn't need to run this often.
+You can find the IP of an individual container by running `docker inspect -f '{{.NetworkSettings.IPAddress}}' <container_name>` where `<container_name>` is the name of the container you wish to connect to.
 
 ### Service Discovery via DNS
-Now that you've got transparent routing to your Docker containers, it is time to improve their accessibility by using a DNS server.
+If you wish to use DNS records to improve your containers accessibility, you can easily do so by leveraging the [dnsdock](https://github.com/tonistiigi/dnsdock) container.
 
-First, let's start by configuring the default Docker service DNS server to IP where the DNS server will run (`172.17.42.1`). Currently, this requires SSH'ing into the VM and editing `/etc/default/docker`, but this likely to change in the [future](https://github.com/nlf/dlite/issues/90).
-
-Add the DNS server static IP via `--bip` and `--dns`:
-
-```
-DOCKER_ARGS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 -s btrfs --bip=172.17.42.1/24 --dns=172.17.42.1"
-```
-
-Then edit the rc script `/etc/init.d/S51docker` that starts Docker and run the DNS server on startup:
-
-Add after `[ $? = 0 ] && echo "OK" || echo "FAIL"`:
+First, run the dnsdock service:
 
 ```sh
-/usr/bin/docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock -p 172.17.42.1:53:53/udp tonistiigi/dnsdock
+docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock --restart always -p 172.17.0.1:53:53/udp tonistiigi/dnsdock
 ```
 
-Add before `start-stop-daemon -K -q -p /var/run/docker.pid`:
-
-```sh
-/usr/bin/docker rm --force dnsdock
-```
-
-After all of this is done just restart the Docker service inside the VM to get the DNS server up and running:
-
-```sh
-sudo /etc/init.d/S51docker restart
-```
+Next, edit your config file for DLite via `dlite config`. Set the value of the `"extra"` option to `"--bip=172.17.0.1/24 --dns=172.17.0.1"` and exit your editor.
 
 Lastly, configure OSX so that all `.docker` requests are forwarded to Docker's DNS server. Since routing has already been taken care of, just create a custom resolver under `/etc/resolver/docker` with the following content:
 
 ```
-nameserver 172.17.42.1
+nameserver 172.17.0.1
 ```
 
 Then restart OSX's own DNS server:
@@ -124,14 +92,14 @@ sudo killall -HUP mDNSResponder
 Check if the DNS server is working as expected by querying a running image:
 
 ```sh
-dig <image>.docker @172.17.42.1
+dig <image>.docker @172.17.0.1
 ```
 
 You should see a Docker network IP resolved correctly:
 
 ```
 ;; ANSWER SECTION:
-<image>.docker.    0    IN    A    172.17.42.3
+<image>.docker.    0    IN    A    172.17.0.2
 ```
 
 #### Troubleshooting DNS
@@ -140,11 +108,8 @@ It usually takes some time to adapt to the DNS naming scheme of `dnsdock`, so if
 `docker logs --follow dnsdock`
 
 ## Troubleshooting
-### Conflicting nfs exports
-A common cause of the virtual machine failing to start is conflicting entries in your `/etc/exports` file. Edit the file and see if any other process has an export that conflicts with the one DLite added (it will have comments before and after it, making it easy to identify). If they do, remove the conflicting entry and try starting the service again. Note that dlite adds its export when it is started, not when it is installed, so make sure to either clean your exports file or specify a shared directory that doesn't conflict with existing shares when you install.
-
 ### Unresponsive `docker` cli
-If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite`. Save the hosts file and run `dlite start` and try again.
+If `docker` cli commands hang, there's a good chance that you have a stale entry in your `/etc/hosts` file. Run `dlite stop`, then use sudo to edit your `/etc/hosts` file and remove any entries that end with `# added by dlite` or are surrounded by `# begin dlite` and `# end dlite` comments. Save the hosts file and run `dlite start` and try again.
 
 #### Tmux sessions
 Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
@@ -152,9 +117,6 @@ Note that `launchctl` commands appear to not work correctly when run inside tmux
 ## Caveats
 ### Hypervisor framework
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer. You also need a fairly recent mac. You can tell if your computer is new enough by running `sysctl kern.hv_support` in a terminal. If you see `kern.hv_support: 1` as a response, you're good to go. If not, unfortunately your computer is too old to leverage the Hypervisor framework and DLite won't work for you.
-
-### Sparse disk images
-Xhyve, and therefore DLite, does not support sparse disk images. This means that when you create a virtual machine with DLite the _full size_ of the image must be allocated up front. There is ongoing work to support sparse images in xhyve, and once that support lands DLite will be able to take advantage of it. See [xhyve#80](https://github.com/mist64/xhyve/pull/80), [xhyve#82](https://github.com/mist64/xhyve/pull/82), and [xhyve-xyz/xhyve#1](https://github.com/xhyve-xyz/xhyve/pull/1) for more information.
 
 ### Crash when waking after long sleep
 There is an open issue with Xhyve ([https://github.com/mist64/xhyve/issues/86](https://github.com/mist64/xhyve/issues/86)) that causes OSX to crash when waking after a long sleep.
