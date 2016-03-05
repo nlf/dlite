@@ -79,7 +79,7 @@ func AddHost(hostname, ip string) error {
 
 	var temp []byte
 	if begin > -1 && end > -1 {
-		temp = append(hosts[:begin], hosts[end + len(endMarker):]...)
+		temp = append(hosts[:begin], hosts[end+len(endMarker):]...)
 		temp = append(bytes.TrimSpace(temp), '\n')
 	} else {
 		temp = hosts
@@ -111,7 +111,7 @@ func RemoveHost() error {
 		return nil
 	}
 
-	temp := append(hosts[:begin], hosts[end + len(endMarker):]...)
+	temp := append(hosts[:begin], hosts[end+len(endMarker):]...)
 	temp = append(bytes.TrimSpace(temp), '\n')
 	if len(temp) > 0 && !bytes.HasSuffix(temp, []byte("\n")) {
 		temp = append(temp, []byte("\n")...)

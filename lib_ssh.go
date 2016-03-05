@@ -12,7 +12,7 @@ func GenerateSSHKey() error {
 	path := os.ExpandEnv("$HOME/.dlite/docker")
 	if _, err := os.Stat(path); err == nil {
 		os.RemoveAll(path)
-		os.RemoveAll(path+".pub")
+		os.RemoveAll(path + ".pub")
 	}
 	output, err := exec.Command("ssh-keygen", "-t", "RSA", "-b", "4096", "-C", "dlite", "-f", path, "-N", "").CombinedOutput()
 	if err != nil {
@@ -25,7 +25,7 @@ func GenerateSSHKey() error {
 		return err
 	}
 
-	return changePermissions(path+".pub")
+	return changePermissions(path + ".pub")
 }
 
 func AddSSHConfig(hostname, ip string) error {
@@ -50,7 +50,7 @@ func AddSSHConfig(hostname, ip string) error {
 	var temp []byte
 
 	if begin > -1 && end > -1 {
-		temp = append(config[:begin], config[end + len(endMarker):]...)
+		temp = append(config[:begin], config[end+len(endMarker):]...)
 		temp = append(bytes.TrimSpace(temp), '\n')
 	} else {
 		temp = config
@@ -82,7 +82,7 @@ func RemoveSSHConfig() error {
 		return nil
 	}
 
-	temp := append(config[:begin], config[end + len(endMarker):]...)
+	temp := append(config[:begin], config[end+len(endMarker):]...)
 	temp = append(bytes.TrimSpace(temp), '\n')
 	if len(temp) > 0 && !bytes.HasSuffix(temp, []byte("\n")) {
 		temp = append(temp, []byte("\n")...)
