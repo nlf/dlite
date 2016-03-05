@@ -40,6 +40,7 @@ func StartVM(config Config) chan error {
 		done <- err
 	}(done)
 
-	<-ptyCh
+	socket := <-ptyCh
+	changePermissions(socket)
 	return done
 }
