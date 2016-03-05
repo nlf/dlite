@@ -67,16 +67,13 @@ However, on OSX, this means you are not able to access the Docker network direct
 Run the following commands on your OSX machine:
 
 ```sh
-sudo route -n add 172.17.0.0/16 local.docker
-DOCKER_INTERFACE=$(route get local.docker | grep interface: | cut -f 2 -d: | tr -d ' ')
-DOCKER_INTERFACE_MEMBERSHIP=$(ifconfig ${DOCKER_INTERFACE} | grep member: | cut -f 2 -d: | cut -c 2-4)
-sudo ifconfig "${DOCKER_INTERFACE}" -hostfilter "${DOCKER_INTERFACE_MEMBERSHIP}"
+sudo route -n add 172.17.0.0/16 local.docker; DOCKER_INTERFACE=$(route get local.docker | grep interface: | cut -f 2 -d: | tr -d ' '); for interface in $(ifconfig ${DOCKER_INTERFACE} | grep member: | cut -f 2 -d: | cut -c 2-4); do sudo ifconfig bridge100 -hostfilter $interface 2> /dev/null; ping -q -c2 -t2 $(docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1)) > /dev/null; if [ $? -eq 0 ]; then echo; echo "Interface $interface configured"; break; fi; done
 ```
 
 See if it works by pinging the IP of any running container (assuming you have at least one):
 
 ```sh
-docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1)
+ping -c5 $(docker inspect -f '{{.NetworkSettings.IPAddress}}' $(docker ps -q | head -1))
 ```
 
 For now, you may include this on a profile script if desired in case you need to repeat the same steps. Unless you reboot your OSX machine, you shouldn't need to run this often.
