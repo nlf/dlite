@@ -12,10 +12,11 @@ func (c *DaemonCommand) Execute(args []string) error {
 	EnsureSudo()
 
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM, os.Kill)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	go func() {
 		<-shutdown
 		ShutdownVM()
+		os.RemoveAll("/var/run/docker.sock")
 	}()
 
 	config, err := ReadConfig()
