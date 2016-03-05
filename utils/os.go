@@ -9,23 +9,7 @@ import (
 )
 
 func GetLatestOSVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/nlf/dhyve-os/releases/latest")
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	var latest struct {
-		Tag string `json:"tag_name"`
-	}
-
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&latest)
-	if err != nil {
-		return "", err
-	}
-
-	return latest.Tag, nil
+	return "v2.2.0", nil
 }
 
 func DownloadOS(version string) error {
