@@ -9,12 +9,17 @@ import (
 type SSHCommand struct{}
 
 func (c *SSHCommand) Execute(args []string) error {
+	config, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
 	path, err := exec.LookPath("ssh")
 	if err != nil {
 		return err
 	}
 
-	args = append([]string{"", "local.docker"}, args...)
+	args = append([]string{"", config.Hostname}, args...)
 	return syscall.Exec(path, args, os.Environ())
 }
 
