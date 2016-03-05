@@ -22,7 +22,7 @@ const template = `<?xml version="1.0" encoding="UTF-8"?>
 		</array>
 		<key>RunAtLoad</key>
 		<true/>
-		<key>StandardPath</key>
+		<key>StandardOutPath</key>
 		<string>%s</string>
 		<key>StandardErrorPath</key>
 		<string>%s</string>
