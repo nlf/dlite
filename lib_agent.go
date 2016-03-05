@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/kardianos/osext"
 )
@@ -71,6 +73,10 @@ func RemoveAgent() error {
 }
 
 func StopAgent() error {
+	if !AgentRunning() {
+		return nil
+	}
+
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
 	err := exec.Command("launchctl", "stop", "local.dlite").Run()
 	if err != nil {
@@ -81,6 +87,10 @@ func StopAgent() error {
 }
 
 func StartAgent() error {
+	if AgentRunning() {
+		return nil
+	}
+
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
 	err := exec.Command("launchctl", "load", filePath).Run()
 	if err != nil {
@@ -88,4 +98,36 @@ func StartAgent() error {
 	}
 
 	return exec.Command("launchctl", "start", "local.dlite").Run()
+}
+
+func AgentRunning() bool {
+	list, err := exec.Command("sudo", "-u", os.ExpandEnv("$SUDO_USER"), "launchctl", "list", "local.dlite").Output()
+	if err != nil {
+		return false
+	}
+
+	if bytes.Contains(list, []byte("Could not find service")) {
+		return false
+	}
+
+	pidStartMarker := []byte("\"PID\" = ")
+	pidEndMarker := []byte(";")
+
+	pidStart := bytes.Index(list, pidStartMarker)
+	if pidStart == -1 {
+		return false
+	}
+
+	pidEnd := bytes.Index(list[pidStart:], pidEndMarker) + pidStart
+	if pidEnd == -1 {
+		return false
+	}
+
+	pidString := string(list[pidStart+len(pidStartMarker) : pidEnd])
+	pid, err := strconv.Atoi(pidString)
+	if err != nil {
+		return false
+	}
+
+	return pid > 0
 }
