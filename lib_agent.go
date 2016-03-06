@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/kardianos/osext"
 )
@@ -74,7 +75,7 @@ func RemoveAgent() error {
 
 func StopAgent() error {
 	if !AgentRunning() {
-		return nil
+		return fmt.Errorf("The agent is already stopped")
 	}
 
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
@@ -83,12 +84,19 @@ func StopAgent() error {
 		return err
 	}
 
+	for {
+		time.Sleep(time.Millisecond * 100)
+		if !AgentRunning() {
+			break
+		}
+	}
+
 	return exec.Command("launchctl", "unload", filePath).Run()
 }
 
 func StartAgent() error {
 	if AgentRunning() {
-		return nil
+		return fmt.Errorf("The agent is already running")
 	}
 
 	filePath := os.ExpandEnv("$HOME/Library/LaunchAgents/local.dlite.plist")
@@ -97,7 +105,19 @@ func StartAgent() error {
 		return err
 	}
 
-	return exec.Command("launchctl", "start", "local.dlite").Run()
+	err = exec.Command("launchctl", "start", "local.dlite").Run()
+	if err != nil {
+		return err
+	}
+
+	for {
+		time.Sleep(time.Millisecond * 100)
+		if AgentRunning() {
+			break
+		}
+	}
+
+	return nil
 }
 
 func AgentRunning() bool {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 )
@@ -20,17 +19,60 @@ func (c *ConfigCommand) Execute(args []string) error {
 		return err
 	}
 
-	fmt.Println("Stopping agent...")
-	StopAgent()
-	fmt.Printf("Editing config file at %s\n", path)
+	started := AgentRunning()
+
+	if started {
+		steps := Steps{
+			{
+				"Stopping the agent",
+				func() error {
+					StopAgent()
+					return nil
+				},
+			},
+		}
+
+		err := Spin(steps)
+		if err != nil {
+			return err
+		}
+	}
+
 	cmd := exec.Command(editor, path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
-	fmt.Println("Restarting agent...")
-	StartAgent()
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	if started {
+		steps := Steps{
+			{
+				"Starting the agent",
+				func() error {
+					StartAgent()
+					return nil
+				},
+			},
+		}
+
+		return Spin(steps)
+	}
+
 	return nil
+	// fmt.Println("Stopping agent...")
+	// StopAgent()
+	// fmt.Printf("Editing config file at %s\n", path)
+	// cmd := exec.Command(editor, path)
+	// cmd.Stdin = os.Stdin
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	// cmd.Run()
+	// fmt.Println("Restarting agent...")
+	// StartAgent()
+	// return nil
 }
 
 func init() {

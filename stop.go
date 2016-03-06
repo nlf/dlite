@@ -3,7 +3,17 @@ package main
 type StopCommand struct{}
 
 func (c *StopCommand) Execute(args []string) error {
-	return StopAgent()
+
+	steps := Steps{
+		{
+			"Stopping the agent",
+			func() error {
+				return StopAgent()
+			},
+		},
+	}
+
+	return Spin(steps)
 }
 
 func init() {
