@@ -1,4 +1,6 @@
 # DLite
+
+[![Join the chat at https://gitter.im/nlf/dlite](https://badges.gitter.im/nlf/dlite.svg)](https://gitter.im/nlf/dlite?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 The simplest way to use Docker on OSX.
 
 [![build status][travis-image]][travis-url]
