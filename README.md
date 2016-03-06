@@ -1,7 +1,7 @@
 # DLite
 The simplest way to use Docker on OSX.
 
-[![Gitter][gitter-image]](gitter-url) [![build status][travis-image]][travis-url]
+[![Gitter][gitter-image]][gitter-url] [![build status][travis-image]][travis-url]
 
 ## Installation
 There are several ways to install DLite. You may install it with [Homebrew](http://brew.sh/), download it from github or compile it yourself.
