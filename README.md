@@ -86,10 +86,18 @@ sudo mkdir -p /etc/resolver
 echo "nameserver 172.17.0.1" | sudo tee /etc/resolver/docker
 ```
 
-Then restart OSX's own DNS server:
+Then restart OSX's own DNS server (10.10.4+):
 
 ```
+sudo dscacheutil -flushcache
 sudo killall -HUP mDNSResponder
+```
+
+Or when using OSX Yosemite (up until 10.10.4):
+
+```
+sudo discoveryutil mdnsflushcache
+sudo discoveryutil udnsflushcaches
 ```
 
 Check if the DNS server is working as expected by querying a running image:
@@ -105,10 +113,27 @@ You should see a Docker network IP resolved correctly:
 <image>.docker.    0    IN    A    172.17.0.2
 ```
 
-#### Troubleshooting DNS
+#### Diagnosing DNS
 It usually takes some time to adapt to the DNS naming scheme of `dnsdock`, so if you'd like see which DNS names are being registered in real time, just follow the `dnsdock` logs:
 
 `docker logs --follow dnsdock`
+
+Sometimes the DNS server does not pickup the new resolver immediately. This may require a full `mDNSResponder` restart:
+
+```
+sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
+sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
+```
+
+Then check with `scutil --dns` if you have the following entry:
+
+```
+resolver #<n>
+  domain   : docker
+  nameserver[0] : 172.17.0.1
+  flags    : Request A records
+Reachable
+```
 
 ## Troubleshooting
 ### Unresponsive `docker` cli
