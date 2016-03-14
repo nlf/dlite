@@ -19,6 +19,7 @@ func StartVM(config Config) chan error {
 
 		user_name := os.ExpandEnv("$SUDO_USER")
 		user_id := os.ExpandEnv("$SUDO_UID")
+		group_id := os.ExpandEnv("$SUDO_GID")
 		home := os.ExpandEnv("$HOME")
 		cmdline := fmt.Sprintf("console=ttyS0 hostname=dlite uuid=%s dns_server=%s user_name=%s user_id=%s docker_version=%s docker_extra=%s", config.Uuid, config.DNSServer, user_name, user_id, config.DockerVersion, config.Extra)
 
@@ -31,7 +32,7 @@ func StartVM(config Config) chan error {
 			"-s", "31,lpc",
 			"-s", "2:0,virtio-net",
 			"-s", "4,ahci-hd," + path,
-			"-s", "5,virtio-9p,host=" + home,
+			"-s", fmt.Sprintf("5,virtio-9p,host=%s,uid=%s,gid=%s", home, user_id, group_id),
 			"-U", config.Uuid,
 			"-f", fmt.Sprintf("kexec,%s/.dlite/bzImage,%s/.dlite/rootfs.cpio.xz,%s", home, home, cmdline),
 		}
