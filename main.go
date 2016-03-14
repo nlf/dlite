@@ -7,7 +7,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const VERSION = "2.0.0"
+const VERSION = "2.0.0-beta4"
 
 type Options struct{}
 
