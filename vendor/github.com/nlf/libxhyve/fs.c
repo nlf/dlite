@@ -42,6 +42,7 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/xattr.h>
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
@@ -52,7 +53,7 @@
 #include "../log.h"
 
 static struct openfile *open_fid(const char *);
-static void dostat(struct l9p_stat *, char *, struct stat *, bool dotu);
+static void dostat(struct l9p_stat *, char *, struct stat *, bool dotu, struct openfile *);
 static void generate_qid(struct stat *, struct l9p_qid *);
 static void fs_attach(void *, struct l9p_request *);
 static void fs_clunk(void *, struct l9p_request *);
@@ -71,6 +72,8 @@ struct fs_softc
 {
 	const char *fs_rootpath;
 	bool fs_readonly;
+	uid_t uid;
+	gid_t gid;
 	TAILQ_HEAD(, fs_tree) fs_auxtrees;
 };
 
@@ -103,7 +106,7 @@ open_fid(const char *path)
 }
 
 static void
-dostat(struct l9p_stat *s, char *name, struct stat *buf, bool dotu)
+dostat(struct l9p_stat *s, char *name, struct stat *buf, bool dotu, struct openfile *file)
 {
 	struct passwd *user;
 	struct group *group;
@@ -138,9 +141,24 @@ dostat(struct l9p_stat *s, char *name, struct stat *buf, bool dotu)
 	/* XXX: not thread safe */
 	s->name = strdup(basename(name));
 
+	char xuser[sizeof(uid_t)], xgroup[sizeof(gid_t)];
+	int uid, gid;
+
+	if (getxattr(name, "dlite_user", &xuser, sizeof(uid_t), 0, 0) < 0) {
+		uid = buf->st_uid;
+	} else {
+		uid = atoi(xuser);
+	}
+
+	if (getxattr(name, "dlite_group", &xgroup, sizeof(gid_t), 0, 0) < 0) {
+		gid = buf->st_gid;
+	} else {
+		gid = atoi(xgroup);
+	}
+
 	if (!dotu) {
-		user = getpwuid(buf->st_uid);
-		group = getgrgid(buf->st_gid);
+		user = getpwuid(uid);
+		group = getgrgid(gid);
 		s->uid = user != NULL ? strdup(user->pw_name) : NULL;
 		s->gid = group != NULL ? strdup(group->gr_name) : NULL;
 		s->muid = user != NULL ? strdup(user->pw_name) : NULL;
@@ -149,9 +167,9 @@ dostat(struct l9p_stat *s, char *name, struct stat *buf, bool dotu)
 		 * When using 9P2000.u, we don't need to bother about
 		 * providing user and group names in textual form.
 		 */
-		s->n_uid = buf->st_uid;
-		s->n_gid = buf->st_gid;
-		s->n_muid = buf->st_uid;
+		s->n_uid = uid;
+		s->n_gid = gid;
+		s->n_muid = uid;
 
 		if (S_ISLNK(buf->st_mode)) {
 			char target[MAXPATHLEN];
@@ -194,21 +212,36 @@ generate_qid(struct stat *buf, struct l9p_qid *qid)
 }
 
 static bool
-check_access(struct stat *st, uid_t uid, int amode)
+check_access(struct stat *st, uid_t uid, gid_t gid, int amode, struct openfile *file, struct fs_softc *sc)
 {
 	struct passwd *pwd;
 	int groups[NGROUPS_MAX];
 	int ngroups = NGROUPS_MAX;
+	char xuser[sizeof(uid_t)], xgroup[sizeof(gid_t)];
+	uid_t fuid;
+	gid_t fgid;
 	int i;
 
 	if (uid == 0)
 		return (true);
 
-	if (st->st_uid == uid) {
+	if (uid == sc->uid)
+		return (true);
+
+	if (getxattr(file->name, "dlite_user", &xuser, sizeof(uid_t), 0, 0) < 0) {
+		fuid = st->st_uid;
+	} else {
+		fuid = atoi(xuser);
+	}
+
+	if (fuid == uid) {
 		if (amode == L9P_OREAD && st->st_mode & S_IRUSR)
 			return (true);
 		
 		if (amode == L9P_OWRITE && st->st_mode & S_IWUSR)
+			return (true);
+
+		if (amode == L9P_ORDWR && st->st_mode & S_IRUSR && st->st_mode & S_IWUSR)
 			return (true);
 		
 		if (amode == L9P_OEXEC && st->st_mode & S_IXUSR)
@@ -222,24 +255,31 @@ check_access(struct stat *st, uid_t uid, int amode)
 	if (amode == L9P_OWRITE && st->st_mode & S_IWOTH)
 		return (true);
 
+	if (amode == L9P_ORDWR && st->st_mode & S_IROTH && st->st_mode & S_IWOTH)
+		return (true);
+
 	if (amode == L9P_OEXEC && st->st_mode & S_IXOTH)
 		return (true);
 
 	/* Check for group access */
-	pwd = getpwuid(uid);
-	getgrouplist(pwd->pw_name, (int)pwd->pw_gid, groups, &ngroups);
+	if (getxattr(file->name, "dlite_group", &xgroup, sizeof(gid_t), 0, 0) < 0) {
+		fgid = st->st_gid;
+	} else {
+		fgid = atoi(xgroup);
+	}
 
-	for (i = 0; i < ngroups; i++) {
-		if (st->st_gid == (gid_t)groups[i]) {
-			if (amode == L9P_OREAD && st->st_mode & S_IRGRP)
-				return (true);
+	if (fgid == gid) {
+		if (amode == L9P_OREAD && st->st_mode & S_IRGRP)
+			return (true);
 
-			if (amode == L9P_OWRITE && st->st_mode & S_IWGRP)
-				return (true);
+		if (amode == L9P_OWRITE && st->st_mode & S_IWGRP)
+			return (true);
 
-			if (amode == L9P_OEXEC && st->st_mode & S_IXGRP)
-				return (true);			
-		}
+		if (amode == L9P_ORDWR && st->st_mode & S_IRGRP && st->st_mode & S_IWGRP)
+			return (true);
+
+		if (amode == L9P_OEXEC && st->st_mode & S_IXGRP)
+			return (true);			
 	}
 
 	return (false);
@@ -262,18 +302,23 @@ fs_attach(void *softc, struct l9p_request *req)
 	req->lr_resp.rattach.qid = req->lr_fid->lo_qid;
 
 	uid = req->lr_req.tattach.n_uname;
-	if (req->lr_conn->lc_version >= L9P_2000U && uid != (uid_t)-1)
-		pwd = getpwuid(uid);
-	else
-		pwd = getpwnam(req->lr_req.tattach.uname);
-
-	if (pwd == NULL) {
-		l9p_respond(req, EPERM);
+	if (req->lr_conn->lc_version >= L9P_2000U && uid != (uid_t)-1) {
+		// just let them attach with the default groupid
+		file->uid = uid;
+		file->gid = sc->gid;
+		l9p_respond(req, 0);
 		return;
 	}
 
-	file->uid = pwd->pw_uid;
-	file->gid = pwd->pw_gid;
+	pwd = getpwnam(req->lr_req.tattach.uname);
+	if (pwd == NULL) {
+		file->uid = sc->uid;
+		file->gid = sc->gid;
+	} else {
+		file->uid = pwd->pw_uid;
+		file->gid = pwd->pw_gid;
+	}
+
 	l9p_respond(req, 0);
 }
 
@@ -319,7 +364,7 @@ fs_create(void *softc, struct l9p_request *req)
 		return;
 	}
 
-	if (!check_access(&st, file->uid, L9P_OWRITE)) {
+	if (!check_access(&st, file->uid, file->gid, L9P_OWRITE, file, sc)) {
 		l9p_respond(req, EPERM);
 		return;
 	}
@@ -395,7 +440,21 @@ fs_create(void *softc, struct l9p_request *req)
 		    mode);
 	}
 
-	if (lchown(newname, file->uid, file->gid) != 0) {
+	if (lchown(newname, sc->uid, sc->gid) != 0) {
+		l9p_respond(req, errno);
+		return;
+	}
+
+	char user[sizeof(uid_t)], group[sizeof(gid_t)];
+	sprintf(user, "%d", file->uid);
+	sprintf(group, "%d", file->gid);
+
+	if (setxattr(newname, "dlite_user", &user, sizeof(uid_t), 0, 0) != 0) {
+		l9p_respond(req, errno);
+		return;
+	}
+
+	if (setxattr(newname, "dlite_group", &group, sizeof(gid_t), 0, 0) != 0) {
 		l9p_respond(req, errno);
 		return;
 	}
@@ -418,10 +477,11 @@ fs_flush(void *softc __unused, struct l9p_request *req)
 }
 
 static void
-fs_open(void *softc __unused, struct l9p_request *req)
+fs_open(void *softc, struct l9p_request *req)
 {
 	struct l9p_connection *conn = req->lr_conn;
 	struct openfile *file = req->lr_fid->lo_aux;
+	struct fs_softc *sc = softc;
 	struct stat st;
 
 	assert(file != NULL);
@@ -431,7 +491,7 @@ fs_open(void *softc __unused, struct l9p_request *req)
 		return;
 	}
 
-	if (!check_access(&st, file->uid, req->lr_req.topen.mode)) {
+	if (!check_access(&st, file->uid, file->gid, req->lr_req.topen.mode, file, sc)) {
 		l9p_respond(req, EPERM);
 		return;
 	}
@@ -471,7 +531,7 @@ fs_read(void *softc __unused, struct l9p_request *req)
 			d = readdir(file->dir);
 			if (d) {
 				lstat(d->d_name, &st);
-				dostat(&l9stat, d->d_name, &st, dotu);
+				dostat(&l9stat, d->d_name, &st, dotu, NULL);
 				if (l9p_pack_stat(req, &l9stat) != 0) {
 					seekdir(file->dir, -1);
 					break;
@@ -531,7 +591,7 @@ fs_remove(void *softc, struct l9p_request *req)
 		return;
 	}
 
-	if (!check_access(&st, file->uid, L9P_OWRITE)) {
+	if (!check_access(&st, file->uid, file->gid, L9P_OWRITE, file, sc)) {
 		l9p_respond(req, EPERM);
 		return;
 	}
@@ -562,7 +622,7 @@ fs_stat(void *softc __unused, struct l9p_request *req)
 	assert(file);
 	
 	lstat(file->name, &st);
-	dostat(&req->lr_resp.rstat.stat, file->name, &st, dotu);
+	dostat(&req->lr_resp.rstat.stat, file->name, &st, dotu, file);
 
 	l9p_respond(req, 0);
 }
@@ -690,8 +750,17 @@ fs_wstat(void *softc, struct l9p_request *req)
 		}
 	}
 
-	if (req->lr_conn->lc_version >= L9P_2000U) {
-		if (lchown(file->name, l9stat->n_uid, l9stat->n_gid) != 0) {
+	if (req->lr_conn->lc_version >= L9P_2000U && (int)l9stat->n_uid > -1 && (int)l9stat->n_gid > -1) {
+		char user[sizeof(uid_t)], group[sizeof(gid_t)];
+		sprintf(user, "%d", l9stat->n_uid);
+		sprintf(group, "%d", l9stat->n_gid);
+
+		if (setxattr(file->name, "dlite_user", &user, sizeof(uid_t), 0, 0) != 0) {
+			l9p_respond(req, errno);
+			return;
+		}
+
+		if (setxattr(file->name, "dlite_group", &group, sizeof(gid_t), 0, 0) != 0) {
 			l9p_respond(req, errno);
 			return;
 		}
@@ -739,7 +808,7 @@ fs_freefid(void *softc __unused, struct l9p_openfile *fid)
 }
 
 int
-l9p_backend_fs_init(struct l9p_backend **backendp, const char *root)
+l9p_backend_fs_init(struct l9p_backend **backendp, const char *root, uid_t uid, gid_t gid)
 {
 	struct l9p_backend *backend;
 	struct fs_softc *sc;
@@ -761,6 +830,8 @@ l9p_backend_fs_init(struct l9p_backend **backendp, const char *root)
 	sc = l9p_malloc(sizeof(*sc));
 	sc->fs_rootpath = strdup(root);
 	sc->fs_readonly = false;
+	sc->uid = uid;
+	sc->gid = gid;
 	backend->softc = sc;
 
 	setpassent(1);

@@ -181,6 +181,6 @@ void l9p_describe_stat(struct l9p_stat *st, struct sbuf *sb);
 void l9p_freefcall(union l9p_fcall *fcall);
 void l9p_freestat(struct l9p_stat *stat);
 
-int l9p_backend_fs_init(struct l9p_backend **backendp, const char *root);
+int l9p_backend_fs_init(struct l9p_backend **backendp, const char *root, uid_t uid, gid_t gid);
 
 #endif  /* LIB9P_LIB9P_H */

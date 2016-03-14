@@ -207,6 +207,10 @@ pci_vt9p_init(struct pci_devinst *pi, char *opts)
 	char *opt;
 	char *sharename = NULL;
 	char *rootpath = NULL;
+	char *param = NULL;
+	char *val = NULL;
+	uid_t uid;
+	gid_t gid;
 
 	if (opts == NULL) {
 		printf("virtio-9p: share name and path required\n");
@@ -221,16 +225,25 @@ pci_vt9p_init(struct pci_devinst *pi, char *opts)
 			sharename = strsep(&opt, "=");
 			rootpath = strdup(opt);
 			continue;
+		} else if (strcmp(opt, "ro") == 0) {
+		    DPRINTF(("read-only mount requested\r\n"));
+		} else {
+		    param = strsep(&opt, "=");
+		    val = strdup(opt);
+		    if (strcmp(param, "uid") == 0) {
+			uid = atoi(val);
+			continue;
+		    } else if (strcmp(param, "gid") == 0) {
+			gid = atoi(val);
+			continue;
+		    }
 		}
-
-		if (strcmp(opt, "ro") == 0)
-			DPRINTF(("read-only mount requested\r\n"));
 	}
 
 	sc->vsc_config->tag_len = (uint16_t)strlen(sharename);
 	strncpy(sc->vsc_config->tag, sharename, strlen(sharename));
 	
-	if (l9p_backend_fs_init(&sc->vsc_fs_backend, rootpath) != 0) {
+	if (l9p_backend_fs_init(&sc->vsc_fs_backend, rootpath, uid, gid) != 0) {
 		errno = ENXIO;
 		return (1);
 	}
