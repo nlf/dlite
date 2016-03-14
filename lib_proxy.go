@@ -1,12 +1,12 @@
 package main
 
 import (
+	// "bufio"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -72,79 +72,54 @@ func Proxy(ip string, done chan error) error {
 		r.URL.Scheme = "http"
 		r.URL.Host = ip + ":2375"
 
-		upgrade := false
-		if strings.HasSuffix(r.URL.Path, "/attach") {
-			upgrade = true
-		} else if len(r.Header["Upgrade"]) > 0 {
-			upgrade_header := strings.ToLower(r.Header["Upgrade"][0])
-			upgrade = upgrade_header == "tcp" || upgrade_header == "websocket"
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
 		}
 
-		if upgrade {
-			hj, ok := w.(http.Hijacker)
-			if !ok {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			conn, _, err := hj.Hijack()
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			addr, err := net.ResolveTCPAddr("tcp", ip+":2375")
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			backend, err := net.DialTCP("tcp", nil, addr)
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			finished := make(chan error, 1)
-
-			go func() {
-				buf := make([]byte, 8092)
-				_, err := io.CopyBuffer(conn, backend, buf)
-				conn.Close()
-				finished <- err
-			}()
-
-			go func() {
-				buf := make([]byte, 8092)
-				_, err := io.CopyBuffer(backend, conn, buf)
-				backend.CloseWrite()
-				finished <- err
-			}()
-
-			r.Write(backend)
-			defer r.Body.Close()
-			defer backend.Close()
-
-			<-finished
-			<-finished
-		} else {
-			resp, err := http.DefaultTransport.RoundTrip(r)
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-
-			defer resp.Body.Close()
-
-			for k, v := range resp.Header {
-				for _, vv := range v {
-					w.Header().Add(k, vv)
-				}
-			}
-
-			w.WriteHeader(resp.StatusCode)
-			io.Copy(w, resp.Body)
+		conn, _, err := hj.Hijack()
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
 		}
+
+		addr, err := net.ResolveTCPAddr("tcp", ip+":2375")
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+
+		backend, err := net.DialTCP("tcp", nil, addr)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+
+		r.Write(backend)
+
+		finished := make(chan error, 1)
+
+		go func() {
+			buf := make([]byte, 8092)
+			_, err := io.CopyBuffer(backend, conn, buf)
+			conn.Close()
+			finished <- err
+		}()
+
+		go func() {
+			buf := make([]byte, 8092)
+			_, err := io.CopyBuffer(conn, backend, buf)
+			backend.CloseWrite()
+			finished <- err
+		}()
+
+		<-finished
+		<-finished
+		backend.Close()
 	})
 
 	server := http.Server{
