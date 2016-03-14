@@ -106,14 +106,14 @@ func Proxy(ip string, done chan error) error {
 		go func() {
 			buf := make([]byte, 8092)
 			_, err := io.CopyBuffer(backend, conn, buf)
-			conn.Close()
+			backend.CloseWrite()
 			finished <- err
 		}()
 
 		go func() {
 			buf := make([]byte, 8092)
 			_, err := io.CopyBuffer(conn, backend, buf)
-			backend.CloseWrite()
+			conn.Close()
 			finished <- err
 		}()
 
