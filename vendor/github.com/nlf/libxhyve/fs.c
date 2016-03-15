@@ -750,19 +750,23 @@ fs_wstat(void *softc, struct l9p_request *req)
 		}
 	}
 
-	if (req->lr_conn->lc_version >= L9P_2000U && (int)l9stat->n_uid > -1 && (int)l9stat->n_gid > -1) {
+	if (req->lr_conn->lc_version >= L9P_2000U) {
 		char user[sizeof(uid_t)], group[sizeof(gid_t)];
 		sprintf(user, "%d", l9stat->n_uid);
 		sprintf(group, "%d", l9stat->n_gid);
 
-		if (setxattr(file->name, "dlite_user", &user, sizeof(uid_t), 0, 0) != 0) {
-			l9p_respond(req, errno);
-			return;
+		if ((int)l9stat->n_uid > -1) {
+			if (setxattr(file->name, "dlite_user", &user, sizeof(uid_t), 0, 0) != 0) {
+				l9p_respond(req, errno);
+				return;
+			}
 		}
-
-		if (setxattr(file->name, "dlite_group", &group, sizeof(gid_t), 0, 0) != 0) {
-			l9p_respond(req, errno);
-			return;
+		
+		if ((int)l9stat->n_gid > -1) {
+			if (setxattr(file->name, "dlite_group", &group, sizeof(gid_t), 0, 0) != 0) {
+				l9p_respond(req, errno);
+				return;
+			}
 		}
 	}
 
