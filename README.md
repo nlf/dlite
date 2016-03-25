@@ -26,6 +26,9 @@ sudo dlite install
 
 See the output of `sudo dlite install --help` for additional options, like changing number of CPUs, Disk Size, et cetera.
 
+### Firewall
+If you're running the OS X firewall, you will need to set `bootp` to allow incoming connections for DLite to startup correctly.
+
 After you've installed, you need to start the process:
 
 ```
