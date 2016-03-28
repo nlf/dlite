@@ -1,4 +1,5 @@
-#DLite
+#DLite 1.1.4
+###for the latest and greatest, see the [master branch](https://github.com/nlf/dlite/tree/master)
 
 The simplest way to use Docker on OSX. [![Build Status](https://travis-ci.org/nlf/dlite.svg?branch=master)](https://travis-ci.org/nlf/dlite)
 
