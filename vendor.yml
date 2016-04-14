@@ -17,8 +17,6 @@ vendors:
   rev: 56b76bdf51f7708750eac80fa38b952bb9f32639
 - path: github.com/nlf/libxhyve
   rev: c07abbb36cf08a848e3c615022a0f0bbb27ad61e
-- path: github.com/ricochet2200/go-disk-usage
-  rev: f0d1b743428fc09792f93233d9412f89f88fa2ab
 - path: github.com/satori/go.uuid
   rev: e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502
 - path: golang.org/x/sys

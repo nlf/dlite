@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/DHowett/go-plist"
-	"github.com/ricochet2200/go-disk-usage/du"
 )
 
 type Device struct {
@@ -124,11 +123,6 @@ func DetachDisk() error {
 }
 
 func CreateDisk(size int) error {
-	usage := du.NewDiskUsage(os.ExpandEnv("$HOME/.dlite"))
-	if (usage.Free() / (1024 * 1024 * 1024)) < uint64(size) {
-		return fmt.Errorf("Not enough free space to allocate a %dGiB disk image", size)
-	}
-
 	DetachDisk()
 	path := os.ExpandEnv("$HOME/.dlite/disk")
 	err := os.RemoveAll(path + ".sparseimage")
