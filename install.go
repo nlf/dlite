@@ -25,27 +25,32 @@ type InstallCommand struct {
 func (c *InstallCommand) Execute(args []string) error {
 	EnsureSudo()
 
-	fmt.Println("The install command will make the following changes to your system:")
-	fmt.Println("- Create a '.dlite' directory in your home")
-	fmt.Printf("- Create a %d GiB sparse disk image in the '.dlite' directory\n", c.Disk)
-	if c.Version == "" {
-		fmt.Println("- Download the latest version of DhyveOS to the '.dlite' directory")
-	} else {
-		fmt.Printf("- Download version %s of DhyveOS to the '.dlite' directory\n", c.Version)
+	versionMsg := "the latest version"
+	if c.Version != "" {
+		versionMsg = "version " + c.Version
 	}
-	fmt.Println("- Create a 'config.json' file in the '.dlite' directory")
-	fmt.Println("- Create a new SSH key pair in the '.dlite' directory for the vm")
-	fmt.Println("- Add a line to your sudoers file to allow running the 'dlite' binary without a password")
-	fmt.Println("- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon")
-	fmt.Println("- Store logs from the daemon in '~/Library/Logs'")
-	fmt.Println()
-	fmt.Println("In addition to the above actions that take place during installation, when the service is started a few other files are modified.")
-	fmt.Println("While DLite makes every effort to not damage any of these files, it is advisable for you to back them up manually before installation")
-	fmt.Println("The files are:")
-	fmt.Println("- /etc/hosts")
-	fmt.Println("- /etc/sudoers")
-	fmt.Println("- ~/.ssh/config")
-	fmt.Println()
+	fmt.Printf(`
+The install command will make the following changes to your system:
+- Create a '.dlite' directory in your home
+- Create a %d GiB sparse disk image in the '.dlite' directory
+- Download %s of DhyveOS to the '.dlite' directory
+- Create a 'config.json' file in the '.dlite' directory
+- Create a new SSH key pair in the '.dlite' directory for the vm
+- Add a line to your sudoers file to allow running the 'dlite' binary without a password
+- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon
+- Store logs from the daemon in '~/Library/Logs'
+
+IMPORTANT: if the dlite binary is in a path writeable by the user (which is the case if you installed with Homebrew or go get, for example),
+the sudoers change will let any attacker bypass the sudo password by modifying the binary. THIS EFFECTIVELY DISABLES SUDO PASSWORD SECURITY.
+
+In addition to the above actions that take place during installation, when the service is started a few other files are modified.
+While DLite makes every effort to not damage any of these files, it is advisable for you to back them up manually before installation
+The files are:
+- /etc/hosts
+- /etc/sudoers
+- ~/.ssh/config
+
+`, c.Disk, versionMsg)
 
 	fmt.Print("Would you like to continue? (Y/n): ")
 	reader := bufio.NewReader(os.Stdin)
