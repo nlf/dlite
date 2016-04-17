@@ -1,5 +1,9 @@
 #DLite 1.1.5
-###for the latest and greatest, see the [master branch](https://github.com/nlf/dlite/tree/master)
+
+### Note:
+Due to an assumption on my part about how quickly I would be able to develop DLite 2.x, the 1.x series clients will not be able to detect new OS releases. In order to update your OS, you will have to do so *manually*. Either `dlite install -v 2.3.0` or `dlite update -v 2.3.0` (if you've already installed).
+
+Sorry for any confusion this has caused, I'm hoping to have the 2.x release out in the next week or two.
 
 The simplest way to use Docker on OSX. [![Build Status](https://travis-ci.org/nlf/dlite.svg?branch=master)](https://travis-ci.org/nlf/dlite)
 
