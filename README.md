@@ -1,4 +1,7 @@
 # DLite
+
+## THIS BRANCH IS CURRENTLY BROKEN. DO NOT USE UNLESS YOU KNOW WHAT YOU'RE DOING
+
 The simplest way to use Docker on OSX.
 
 [![Gitter][gitter-image]][gitter-url] [![build status][travis-image]][travis-url]
