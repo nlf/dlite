@@ -1,29 +1,45 @@
 package main
 
+import (
+	"os"
+
+	"github.com/nlf/dlite/config"
+	"github.com/nlf/dlite/disk"
+)
+
 type RebuildCommand struct {
 	Disk int `short:"d" long:"disk" description:"size of disk in GiB to create"`
 }
 
 func (c *RebuildCommand) Execute(args []string) error {
-	config, err := ReadConfig()
-	if err != nil {
-		return err
-	}
+	var cfg *config.Config
 
 	steps := Steps{
 		{
+			"Reading configuration",
+			func() error {
+				cfg, err := config.New(os.ExpandEnv("$USER"))
+				if err != nil {
+					return err
+				}
+
+				return cfg.Load()
+			},
+		},
+		{
 			"Rebuilding disk image",
 			func() error {
-				if c.Disk == 0 {
-					c.Disk = config.DiskSize
-				} else if c.Disk != config.DiskSize {
-					config.DiskSize = c.Disk
-					err := SaveConfig(config)
+				if cfg.DiskSize != c.Disk {
+					cfg.DiskSize = c.Disk
+					err := cfg.Save()
 					if err != nil {
 						return err
 					}
 				}
-				return CreateDisk(c.Disk)
+
+				d := disk.New(cfg)
+				d.Detach()
+				return d.Create()
 			},
 		},
 	}

@@ -7,6 +7,11 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/nlf/dlite/config"
+	"github.com/nlf/dlite/disk"
+	"github.com/nlf/dlite/docker"
+	dliteos "github.com/nlf/dlite/os"
+	"github.com/nlf/dlite/ssh"
 	"github.com/satori/go.uuid"
 )
 
@@ -23,12 +28,11 @@ type InstallCommand struct {
 }
 
 func (c *InstallCommand) Execute(args []string) error {
-	EnsureSudo()
-
 	versionMsg := "the latest version"
 	if c.Version != "" {
 		versionMsg = "version " + c.Version
 	}
+
 	fmt.Printf(`
 The install command will make the following changes to your system:
 - Create a '.dlite' directory in your home
@@ -36,19 +40,9 @@ The install command will make the following changes to your system:
 - Download %s of DhyveOS to the '.dlite' directory
 - Create a 'config.json' file in the '.dlite' directory
 - Create a new SSH key pair in the '.dlite' directory for the vm
-- Add a line to your sudoers file to allow running the 'dlite' binary without a password
-- Create a launchd agent in '~/Library/LaunchAgents' used to run the daemon
-- Store logs from the daemon in '~/Library/Logs'
-
-IMPORTANT: if the dlite binary is in a path writeable by the user (which is the case if you installed with Homebrew or go get, for example),
-the sudoers change will let any attacker bypass the sudo password by modifying the binary. THIS EFFECTIVELY DISABLES SUDO PASSWORD SECURITY.
-
-In addition to the above actions that take place during installation, when the service is started a few other files are modified.
-While DLite makes every effort to not damage any of these files, it is advisable for you to back them up manually before installation
-The files are:
-- /etc/hosts
-- /etc/sudoers
-- ~/.ssh/config
+- Create a launchd agent in '/Library/LaunchDaemons' used to run the privileged daemon
+- Store logs from the daemon in '/Library/Logs'
+- Create a launchd agent in '~/Library/LaunchAgents' used to start the privileged daemon under this user's context
 
 `, c.Disk, versionMsg)
 
@@ -68,79 +62,74 @@ The files are:
 		return fmt.Errorf("Aborted install due to invalid user input")
 	}
 
+	var cfg *config.Config
 	steps := Steps{
 		{
-			"Building disk image",
+			"Creating configuration",
 			func() error {
-				// clean up but ignore errors since it's possible things weren't installed
-				StopAgent()
-				RemoveAgent()
-				RemoveHost()
-				RemoveDir()
-
-				err := CreateDir()
+				cfg, err := config.New(os.ExpandEnv("$USER"))
 				if err != nil {
 					return err
 				}
 
-				return CreateDisk(c.Disk)
-			},
-		},
-		{
-			"Downloading OS",
-			func() error {
-				if c.Version == "" {
-					latest, err := GetLatestOSVersion()
-					if err != nil {
-						return err
-					}
-					c.Version = latest
-				}
-				return DownloadOS(c.Version)
-			},
-		},
-		{
-			"Generating SSH key",
-			func() error {
-				return GenerateSSHKey()
-			},
-		},
-		{
-			"Writing configuration",
-			func() error {
 				if c.DockerVersion == "" {
-					latest, err := GetLatestDockerVersion()
+					latest, err := docker.Latest()
 					if err != nil {
 						return err
 					}
 					c.DockerVersion = latest
 				}
+
 				if c.Cpus == 0 {
 					c.Cpus = runtime.NumCPU()
 				}
-				uuid := uuid.NewV1().String()
-				return SaveConfig(Config{
-					Uuid:          uuid,
-					CpuCount:      c.Cpus,
-					Memory:        c.Memory,
-					Hostname:      c.Hostname,
-					DockerVersion: c.DockerVersion,
-					Extra:         c.Extra,
-					DNSServer:     c.DNSServer,
-					DiskSize:      c.Disk,
-					Route:         c.Route,
-				})
+
+				cfg.CpuCount = c.Cpus
+				cfg.DockerVersion = c.DockerVersion
+				cfg.Uuid = uuid.NewV1().String()
+				cfg.Memory = c.Memory
+				cfg.Hostname = c.Hostname
+				cfg.DockerVersion = c.DockerVersion
+				cfg.Extra = c.Extra
+				cfg.DNSServer = c.DNSServer
+				cfg.DiskSize = c.Disk
+				cfg.Route = c.Route
+
+				return cfg.Save()
 			},
 		},
 		{
-			"Creating launchd agent",
+			"Building disk image",
 			func() error {
-				err := AddSudoer()
+				d := disk.New(cfg)
+				d.Detach()
+
+				return d.Create()
+			},
+		},
+		{
+			"Downloading OS",
+			func() error {
+				var vers dliteos.Version
+				var err error
+
+				if c.Version == "" {
+					vers, err = dliteos.Latest()
+				} else {
+					vers, err = dliteos.Specific(c.Version)
+				}
 				if err != nil {
 					return err
 				}
 
-				return CreateAgent()
+				return dliteos.Download(cfg.Dir, vers)
+			},
+		},
+		{
+			"Generating SSH key",
+			func() error {
+				s := ssh.New(cfg)
+				return s.Generate()
 			},
 		},
 	}

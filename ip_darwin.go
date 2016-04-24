@@ -2,17 +2,27 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/nlf/dlite/config"
+	"github.com/nlf/dlite/vm"
 )
 
 type IPCommand struct{}
 
 func (c *IPCommand) Execute(args []string) error {
-	config, err := ReadConfig()
+	cfg, err := config.New(os.ExpandEnv("$USER"))
 	if err != nil {
 		return err
 	}
 
-	ip, err := GetIP(config.Uuid)
+	err = cfg.Load()
+	if err != nil {
+		return err
+	}
+
+	v := vm.New(cfg)
+	ip, err := v.IP()
 	if err != nil {
 		return err
 	}
