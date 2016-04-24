@@ -4,58 +4,6 @@
 
 The simplest way to use Docker on OSX.
 
-[![Gitter][gitter-image]][gitter-url] [![build status][travis-image]][travis-url]
-
-## Installation
-There are several ways to install DLite. You may install it with [Homebrew](http://brew.sh/), download it from github or compile it yourself.
-
-### Download
-- Download the latest binary from the [releases page](https://github.com/nlf/dlite/releases) and put it somewhere in your path, or
-- Install it with homebrew: `brew install dlite`, or
-- If you have a working [Go development environment](https://golang.org/doc/install) you can build DLite from source by running:
-
-  ```
-  go get github.com/nlf/dlite
-  ```
-
-  After that you need to compile it (run `make dlite` in the `src/github.com/nlf/dlite` dir.)
-
-### Initialization
-To create the necessary files and a launchd agent which manages the process, simply run
-
-```
-sudo dlite install
-```
-
-See the output of `sudo dlite install --help` for additional options, like changing number of CPUs, Disk Size, et cetera.
-
-### Firewall
-If you're running the OS X firewall, you will need to set `bootp` to allow incoming connections for DLite to startup correctly.
-
-After you've installed, you need to start the process:
-
-```
-dlite start
-```
-
-DLite will start automatically upon logging in as well.
-
-## Updating DLite
-The DLite app itself can be updated by running `dlite stop`, installing the updated binary, and then running `dlite start`.
-
-To install the updated binary with Homebrew simply run `brew upgrade dlite`.
-
-If you update DLite, you probably want to update your VM as well:
-
-## Updating your VM
-It's possible to update your virtual machine without having to rebuild it entirely. To do so, run the following commands
-
-```
-dlite stop
-dlite update
-dlite start
-```
-
 ## Usage
 Just use Docker. DLite creates a `/var/run/docker.sock` in your host operating system.
 
