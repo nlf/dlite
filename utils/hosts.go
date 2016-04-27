@@ -150,6 +150,8 @@ func AddExport(uuid, share string) error {
 	if share == "" {
 		share = "/Users"
 	}
+	
+	nfsexports.Remove("", "dlite")
 
 	export := fmt.Sprintf("%s -network 192.168.64.0 -mask 255.255.255.0 -alldirs -maproot=root:wheel", share)
 	_, err := nfsexports.Add("", "dlite", export)
