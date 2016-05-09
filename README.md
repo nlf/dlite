@@ -99,6 +99,16 @@ If your virtual machine is misbehaving and you're unable to SSH to it, you can u
 #### Tmux sessions
 Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
 
+#### If you had boot2docker or docker-machine installed
+Make sure to unset all the environment variables set up by the `docker-machine`/`boot2docker` installation so that the docker client uses the default configuration. A simple way is to add these lines to your `.bashrc` or corresponding shell profile file:
+
+```
+unset DOCKER_HOST
+unset DOCKER_CERT_PATH
+unset DOCKER_TLS_VERIFY
+unset DOCKER_MACHINE_NAME
+```
+
 ## Caveats
 ### Hypervisor framework
 DLite depends on [xhyve](https://github.com/mist64/xhyve) which only works on OSX versions 10.10 (Yosemite) or newer. You also need a fairly recent mac. You can tell if your computer is new enough by running `sysctl kern.hv_support` in a terminal. If you see `kern.hv_support: 1` as a response, you're good to go. If not, unfortunately your computer is too old to leverage the Hypervisor framework and DLite won't work for you.
