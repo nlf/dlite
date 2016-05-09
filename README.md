@@ -100,7 +100,7 @@ If your virtual machine is misbehaving and you're unable to SSH to it, you can u
 Note that `launchctl` commands appear to not work correctly when run inside tmux. If you are a tmux user and are having problems, try starting the service outside of your tmux session.
 
 #### If you had boot2docker or docker-machine installed
-Make sure to unset the environment variables so that the docker client uses the default configuration, as required by DLite. Add this lines to your `.bashrc` or corresponding shell profile file:
+Make sure to unset all the environment variables set up by the `docker-machine`/`boot2docker` installation so that the docker client uses the default configuration. A simple way is to add these lines to your `.bashrc` or corresponding shell profile file:
 
 ```
 unset DOCKER_HOST
