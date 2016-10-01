@@ -1,0 +1,3 @@
+[submodule "hyperkit"]
+	path = hyperkit
+	url = git://github.com/docker/hyperkit

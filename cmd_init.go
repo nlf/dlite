@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"strconv"
+	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/cli"
@@ -15,8 +15,11 @@ type initCommand struct{}
 func (c *initCommand) Run(args []string) int {
 	currentUser := getUser()
 	configPath := getPath()
+	configFile := filepath.Join(configPath, "config.yaml")
+	diskFile := filepath.Join(configPath, "disk.sparseimage")
+	cfg := Config{}
 
-	err := config.ReadConfigFile(configPath + "/config.yaml")
+	err := config.ReadConfigFile(configFile)
 	if err == nil {
 		ui.Warn("WARNING: It appears you have already initialized dlite. Continuing will destroy your current virtual machine.")
 		response, err := ui.Ask("Continue? (y/n)")
@@ -44,117 +47,66 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
-	config.Set("id", uuid.NewV1().String())
+	cfg.Id = uuid.NewV1().String()
 
-	hostname, err := ui.Ask("Virtual machine hostname: [local.docker]")
+	cfg.Hostname, err = promptString("Virtual machine hostname", "local.docker")
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	if hostname == "" {
-		hostname = "local.docker"
-	}
-
-	config.Set("hostname", hostname)
-
-	diskStr, err := ui.Ask("Disk size (in gigabytes): [20]")
+	cfg.Disk, err = promptInt("Disk size (in gigabytes)", 20)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	disk := 20
-	if diskStr != "" {
-		disk, err = strconv.Atoi(diskStr)
-		if err != nil {
-			ui.Error(err.Error())
-			return 1
-		}
-	}
-	config.Set("disk", disk)
-
-	cpuStr, err := ui.Ask("CPU cores to allocate to VM: [2]")
+	cfg.Cpu, err = promptInt("CPU cores to allocate to VM", 2)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	cpu := 1
-	if cpuStr != "" {
-		cpu, err = strconv.Atoi(cpuStr)
-		if err != nil {
-			ui.Error(err.Error())
-			return 1
-		}
-	}
-	config.Set("cpu", cpu)
-
-	memStr, err := ui.Ask("Memory to allocate to VM (in gigabytes): [2]")
+	cfg.Memory, err = promptInt("Memory to allocate to VM (in gigabytes)", 2)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	mem := 2
-	if memStr != "" {
-		mem, err = strconv.Atoi(memStr)
-		if err != nil {
-			ui.Error(err.Error())
-			return 1
-		}
-	}
-	config.Set("memory", mem)
-
-	dns, err := ui.Ask("DNS server: [192.168.64.1]")
+	cfg.DNS, err = promptString("DNS server", "192.168.64.1")
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
-	if dns == "" {
-		dns = "192.168.64.1"
-	}
-	config.Set("dns", dns)
 
-	docker, err := ui.Ask("Requested docker version: [latest]")
+	cfg.Docker, err = promptString("Docker version", "latest")
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
-	if docker == "" {
-		docker = "latest"
-	}
-	config.Set("docker", docker)
 
-	extra, err := ui.Ask("Extra flags to pass to the docker daemon:")
+	cfg.Extra, err = promptString("Extra flags to pass to the docker daemon", "")
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
-	config.Set("extra", extra)
 
 	ui.Info("Saving configuration..")
-	err = config.WriteConfigFile(configPath+"/config.yaml", 0644)
+	err = writeConfig(cfg)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
 	ui.Info("Creating disk..")
-	d, err := NewDisk(configPath+"/disk.sparseimage", disk, currentUser)
-	if err != nil {
-		ui.Error(err.Error())
-		return 1
-	}
-
-	err = d.Build()
+	err = buildDisk(diskFile, cfg.Disk, currentUser.Uid, currentUser.Gid)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
 	ui.Info("Downloading OS..")
-	err = DownloadOS(configPath)
+	err = downloadOS(configPath)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1

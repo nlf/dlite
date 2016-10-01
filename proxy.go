@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-type stoppableListener struct {
+type unixListener struct {
 	*net.UnixListener
 	done chan bool
 }
 
-func (s *stoppableListener) Accept() (net.Conn, error) {
+func (s *unixListener) Accept() (net.Conn, error) {
 	for {
 		s.SetDeadline(time.Now().Add(time.Second))
 		select {
@@ -35,14 +35,13 @@ func (s *stoppableListener) Accept() (net.Conn, error) {
 	}
 }
 
-func (s *stoppableListener) Close() error {
+func (s *unixListener) Close() error {
 	close(s.done)
 	return nil
 }
 
 type Proxy struct {
 	done      chan bool
-	vm        *VM
 	vmAddress *net.TCPAddr
 }
 
@@ -56,16 +55,15 @@ func (p *Proxy) cleanup() error {
 	return nil
 }
 
-func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
+func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	if p.vmAddress == nil {
-		addr, err := p.vm.IP()
+		var err error
+		p.vmAddress, err = getIP()
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			w.Write([]byte("Unable to locate the virtual machine"))
 			return
 		}
-
-		p.vmAddress = addr
 	}
 
 	backend, err := net.DialTCP("tcp", nil, p.vmAddress)
@@ -130,7 +128,7 @@ func (p *Proxy) Listen() error {
 		return err
 	}
 
-	listener := &stoppableListener{
+	listener := &unixListener{
 		UnixListener: raw,
 		done:         p.done,
 	}
@@ -141,7 +139,7 @@ func (p *Proxy) Listen() error {
 	}
 
 	server := http.Server{
-		Handler: http.HandlerFunc(p.handler),
+		Handler: http.HandlerFunc(p.proxy),
 	}
 
 	return server.Serve(listener)
@@ -151,14 +149,8 @@ func (p *Proxy) Stop() {
 	p.done <- true
 }
 
-func NewProxy() (*Proxy, error) {
-	vm, err := NewVM()
-	if err != nil {
-		return nil, err
-	}
-
+func NewProxy() *Proxy {
 	return &Proxy{
 		done: make(chan bool),
-		vm:   vm,
-	}, nil
+	}
 }

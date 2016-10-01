@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -14,59 +15,79 @@ import (
 
 var allowedRange = semver.MustParseRange(">=3.0.0-beta0")
 
-type asset struct {
+type File struct {
 	Name string `json:"name"`
 	Url  string `json:"browser_download_url"`
 }
 
-type version struct {
-	Tag    string  `json:"tag_name"`
-	Url    string  `json:"tarball_url"`
-	Assets []asset `json:"assets"`
+type Release struct {
+	Version semver.Version
+	Tag     string `json:"tag_name"`
+	Files   []File `json:"assets"`
+}
+type Releases []Release
+
+func (rs Releases) Len() int {
+	return len(rs)
 }
 
-func getLatestOS() ([]asset, error) {
+func (rs Releases) Less(i, j int) bool {
+	return rs[i].Version.LT(rs[j].Version)
+}
+
+func (rs Releases) Swap(i, j int) {
+	rs[i], rs[j] = rs[j], rs[i]
+}
+
+func getOSReleases() (Releases, error) {
 	res, err := http.Get("https://api.github.com/repos/nlf/dhyve-os/releases")
 	if err != nil {
 		return nil, err
 	}
 
 	defer res.Body.Close()
-	versions := []version{}
+	releases := Releases{}
 	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&versions)
+	err = decoder.Decode(&releases)
 	if err != nil {
 		return nil, err
 	}
 
-	versionsMap := map[string]version{}
-	availableVersions := []semver.Version{}
-	for _, version := range versions {
-		ver := semver.MustParse(strings.TrimPrefix(version.Tag, "v"))
-		if allowedRange(ver) {
-			versionsMap[ver.String()] = version
-			availableVersions = append(availableVersions, ver)
+	allowedReleases := Releases{}
+	for _, release := range releases {
+		release.Version = semver.MustParse(strings.TrimPrefix(release.Tag, "v"))
+		if allowedRange(release.Version) {
+			allowedReleases = append(allowedReleases, release)
 		}
 	}
 
-	semver.Sort(availableVersions)
-	return versionsMap[availableVersions[len(availableVersions)-1].String()].Assets, nil
+	sort.Sort(allowedReleases)
+	return allowedReleases, nil
 }
 
-func DownloadOS(target string) error {
-	latest, err := getLatestOS()
+func getLatestOSRelease() (Release, error) {
+	releases, err := getOSReleases()
+	if err != nil {
+		return Release{}, err
+	}
+
+	return releases[len(releases)-1], nil
+}
+
+func downloadOS(target string) error {
+	latest, err := getLatestOSRelease()
 	if err != nil {
 		return err
 	}
 
-	for _, asset := range latest {
-		tempPath := path.Join(target, asset.Name)
+	for _, file := range latest.Files {
+		tempPath := path.Join(target, file.Name)
 		output, err := os.Create(tempPath)
 		if err != nil {
 			return err
 		}
 
-		res, err := http.Get(asset.Url)
+		res, err := http.Get(file.Url)
 		defer res.Body.Close()
 		if err != nil {
 			return err
