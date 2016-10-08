@@ -2,28 +2,31 @@
 
 ## Building
 
+install dependencies
+
 ```sh
 brew install opam golang
 opam init
 eval `opam config env`
 opam pin add qcow-format git://github.com/mirage/ocaml-qcow#master
 opam install uri qcow-format
-go get github.com/jteeuwen/go-bindata/...
-go generate
-go build
+go get -u github.com/jteeuwen/go-bindata/...
 ```
 
-to update your build
+update dependencies (use this if you've already built the project before)
 
 ```sh
-git pull origin master
 git submodule update --init
 opam update
 opam upgrade
+```
+
+build the binary
+
+```sh
 go generate
 go build
 ```
-
 
 ## TODO
 
