@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,14 +16,15 @@ type initCommand struct{}
 
 func (c *initCommand) Run(args []string) int {
 	currentUser := getUser()
-	configPath := getPath()
+	configPath := getPath(currentUser)
+	binPath := filepath.Join(configPath, "bin")
 	configFile := filepath.Join(configPath, "config.yaml")
-	diskFile := filepath.Join(configPath, "disk.sparseimage")
+	diskFile := filepath.Join(configPath, "disk.qcow")
 	cfg := Config{}
 
 	err := config.ReadConfigFile(configFile)
 	if err == nil {
-		ui.Warn("WARNING: It appears you have already initialized dlite. Continuing will destroy your current virtual machine.")
+		ui.Warn("WARNING: It appears you have already initialized dlite. Continuing will destroy your current virtual machine and its configuration.")
 		response, err := ui.Ask("Continue? (y/n)")
 		if err != nil {
 			ui.Error(err.Error())
@@ -73,7 +76,13 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
-	cfg.DNS, err = promptString("DNS server", "192.168.64.1")
+	host, err := getHostAddress()
+	if err != nil {
+		ui.Error(err.Error())
+		return 1
+	}
+
+	cfg.DNS, err = promptString("DNS server", host)
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
@@ -91,22 +100,51 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
-	ui.Info("Saving configuration..")
-	err = writeConfig(cfg)
+	fmt.Println("")
+
+	err = spin("Saving configuration", func() error {
+		return writeConfig(configPath, cfg)
+	})
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	ui.Info("Creating disk..")
-	err = buildDisk(diskFile, cfg.Disk, currentUser.Uid, currentUser.Gid)
+	err = spin("Creating tool binaries", func() error {
+		err := os.MkdirAll(binPath, 0755)
+		if err != nil {
+			return err
+		}
+
+		for _, tool := range []string{"com.docker.hyperkit", "qcow-tool"} {
+			bin, err := Asset(tool)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(filepath.Join(binPath, tool), bin, 0755)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
 		ui.Error(err.Error())
 		return 1
 	}
 
-	ui.Info("Downloading OS..")
-	err = downloadOS(configPath)
+	err = spin("Creating disk", func() error {
+		return buildDisk(filepath.Join(binPath, "qcow-tool"), diskFile, cfg.Disk, currentUser.Uid, currentUser.Gid)
+	})
+	if err != nil {
+		ui.Error(err.Error())
+		return 1
+	}
+
+	err = spin("Downloading OS", func() error {
+		return downloadOS(configPath)
+	})
 	if err != nil {
 		ui.Error(err.Error())
 		return 1

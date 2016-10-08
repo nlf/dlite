@@ -6,43 +6,11 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
 )
 
-type unixListener struct {
-	*net.UnixListener
-	done chan bool
-}
-
-func (s *unixListener) Accept() (net.Conn, error) {
-	for {
-		s.SetDeadline(time.Now().Add(time.Second))
-		select {
-		case <-s.done:
-			return nil, fmt.Errorf("Server closed")
-		default:
-		}
-
-		newConn, err := s.UnixListener.Accept()
-		if err != nil {
-			netErr, ok := err.(net.Error)
-			if ok && netErr.Timeout() && netErr.Temporary() {
-				continue
-			}
-		}
-
-		return newConn, err
-	}
-}
-
-func (s *unixListener) Close() error {
-	close(s.done)
-	return nil
-}
-
 type Proxy struct {
-	done      chan bool
-	vmAddress *net.TCPAddr
+	done   chan bool
+	daemon *Daemon
 }
 
 func (p *Proxy) cleanup() error {
@@ -56,17 +24,20 @@ func (p *Proxy) cleanup() error {
 }
 
 func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
-	if p.vmAddress == nil {
-		var err error
-		p.vmAddress, err = getIP()
-		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("Unable to locate the virtual machine"))
-			return
-		}
+	if p.daemon.VM == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("The virtual machine has not been started"))
+		return
 	}
 
-	backend, err := net.DialTCP("tcp", nil, p.vmAddress)
+	addr, err := p.daemon.VM.Address()
+	if err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("Unable to locate the virtual machine"))
+		return
+	}
+
+	backend, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		w.Write([]byte("Unable to connect to the virtual machine"))
@@ -75,7 +46,7 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	defer backend.Close()
 
 	r.URL.Scheme = "http"
-	r.URL.Host = fmt.Sprintf("%s:%d", p.vmAddress.IP.String(), p.vmAddress.Port)
+	r.URL.Host = fmt.Sprintf("%s:%d", addr.IP.String(), addr.Port)
 
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
@@ -147,10 +118,12 @@ func (p *Proxy) Listen() error {
 
 func (p *Proxy) Stop() {
 	p.done <- true
+	p.cleanup()
 }
 
-func NewProxy() *Proxy {
+func NewProxy(daemon *Daemon) *Proxy {
 	return &Proxy{
-		done: make(chan bool),
+		daemon: daemon,
+		done:   make(chan bool),
 	}
 }

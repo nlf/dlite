@@ -6,6 +6,9 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 type User struct {
@@ -13,6 +16,30 @@ type User struct {
 	Home string
 	Uid  int
 	Gid  int
+}
+
+func lookupUser(username string) (*User, error) {
+	rawUser, err := user.Lookup(username)
+	if err != nil {
+		return nil, err
+	}
+
+	uid, err := strconv.Atoi(rawUser.Uid)
+	if err != nil {
+		return nil, err
+	}
+
+	gid, err := strconv.Atoi(rawUser.Gid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &User{
+		Name: rawUser.Username,
+		Home: rawUser.HomeDir,
+		Uid:  uid,
+		Gid:  gid,
+	}, nil
 }
 
 func getUser() User {
@@ -35,16 +62,15 @@ func getUser() User {
 	}
 
 	return User{
-		Name: currentUser.Name,
+		Name: currentUser.Username,
 		Home: currentUser.HomeDir,
 		Uid:  uid,
 		Gid:  gid,
 	}
 }
 
-func getPath() string {
-	currentUser := getUser()
-	return filepath.Join(currentUser.Home, "._dlite")
+func getPath(user User) string {
+	return filepath.Join(user.Home, "._dlite")
 }
 
 func promptString(question, def string) (string, error) {
@@ -76,4 +102,18 @@ func promptInt(question string, def int) (int, error) {
 	}
 
 	return strconv.Atoi(res)
+}
+
+func spin(prefix string, f func() error) error {
+	spin := spinner.New(spinner.CharSets[9], time.Millisecond*100)
+	spin.Prefix = fmt.Sprintf("%s: ", prefix)
+	spin.Start()
+	err := f()
+	spin.Stop()
+	if err != nil {
+		fmt.Printf("\r%s: ERROR!\n", prefix)
+	} else {
+		fmt.Printf("\r%s: done\n", prefix)
+	}
+	return err
 }

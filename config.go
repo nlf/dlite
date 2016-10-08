@@ -18,11 +18,9 @@ type Config struct {
 	Extra    string
 }
 
-func readConfig() (Config, error) {
+func readConfig(path string) (Config, error) {
 	cfg := Config{}
-
-	configPath := getPath()
-	configFile := filepath.Join(configPath, "config.yaml")
+	configFile := filepath.Join(path, "config.yaml")
 
 	err := config.ReadConfigFile(configFile)
 	if err != nil {
@@ -39,7 +37,7 @@ func readConfig() (Config, error) {
 		return cfg, err
 	}
 
-	cfg.DiskPath = filepath.Join(configPath, "disk.sparseimage")
+	cfg.DiskPath = filepath.Join(path, "disk.qcow")
 	cfg.Disk, err = config.GetInt("disk")
 	if err != nil {
 		return cfg, err
@@ -69,9 +67,8 @@ func readConfig() (Config, error) {
 	return cfg, err
 }
 
-func writeConfig(cfg Config) error {
-	configPath := getPath()
-	configFile := filepath.Join(configPath, "config.yaml")
+func writeConfig(path string, cfg Config) error {
+	configFile := filepath.Join(path, "config.yaml")
 
 	config.Set("id", cfg.Id)
 	config.Set("hostname", cfg.Hostname)
