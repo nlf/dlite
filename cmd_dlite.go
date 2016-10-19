@@ -26,6 +26,8 @@ func main() {
 	app.Commands = map[string]cli.CommandFactory{
 		"daemon": daemonFactory,
 		"init":   initFactory,
+		"start":  startFactory,
+		"stop":   stopFactory,
 	}
 
 	status, err := app.Run()
