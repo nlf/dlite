@@ -185,6 +185,10 @@ func NewVM(owner *User) (*VM, error) {
 	disk := filepath.Join(path, "disk.qcow")
 	tty := filepath.Join(path, "vm.tty")
 	log := filepath.Join(path, "vm.log")
+	bootstrapData, err := GetBootstrapData(*owner)
+	if err != nil {
+		return nil, err
+	}
 
 	return &VM{
 		Owner:  owner,
@@ -205,7 +209,7 @@ func NewVM(owner *User) (*VM, error) {
 			"-s", "31,lpc",
 			"-s", "2:0,virtio-net",
 			"-s", fmt.Sprintf("4:0,virtio-blk,file://%s,direct,format=qcow", disk),
-			"-f", fmt.Sprintf("kexec,%s,%s,earlyprintk=serial console=ttyS0 hostname=%s uuid=%s", kernel, rootfs, cfg.Hostname, cfg.Id),
+			"-f", fmt.Sprintf("kexec,%s,%s,earlyprintk=serial console=ttyS0 config=%s", kernel, rootfs, bootstrapData),
 		},
 	}, nil
 }

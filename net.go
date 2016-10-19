@@ -2,6 +2,7 @@ package main
 
 import (
 	"os/exec"
+	"strings"
 )
 
 func getHostAddress() (string, error) {
@@ -10,5 +11,5 @@ func getHostAddress() (string, error) {
 		return "", err
 	}
 
-	return string(addr), nil
+	return strings.TrimSpace(string(addr)), nil
 }
