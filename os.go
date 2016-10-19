@@ -13,7 +13,7 @@ import (
 	"github.com/blang/semver"
 )
 
-var allowedRange = semver.MustParseRange(">=3.0.0-beta0")
+var allowedRange = semver.MustParseRange(">=1.0.0-beta0")
 
 type File struct {
 	Name string `json:"name"`
@@ -40,7 +40,7 @@ func (rs Releases) Swap(i, j int) {
 }
 
 func getOSReleases() (Releases, error) {
-	res, err := http.Get("https://api.github.com/repos/nlf/dhyve-os/releases")
+	res, err := http.Get("https://api.github.com/repos/nlf/dlite-os/releases")
 	if err != nil {
 		return nil, err
 	}
