@@ -26,19 +26,26 @@ func (d *Daemon) Start() {
 	go func() {
 		err := d.Proxy.Listen()
 		if err != nil {
-			fmt.Println("error starting proxy")
-			ui.Error(err.Error())
-			d.Error <- err
-			d.Shutdown()
+			if err.Error() != "Server closed" {
+				ui.Error(err.Error())
+				d.Error <- err
+				d.Shutdown()
+			} else {
+				d.Error <- nil
+			}
 		}
 	}()
 
 	go func() {
 		err := d.API.Listen()
 		if err != nil {
-			ui.Error(err.Error())
-			d.Error <- err
-			d.Shutdown()
+			if err.Error() != "Server closed" {
+				ui.Error(err.Error())
+				d.Error <- err
+				d.Shutdown()
+			} else {
+				d.Error <- nil
+			}
 		}
 	}()
 }
@@ -52,8 +59,10 @@ func (d *Daemon) Shutdown() {
 	d.Error <- fmt.Errorf("Shutting down privileged daemon")
 }
 
-func (d *Daemon) Wait() error {
-	return <-d.Error
+func (d *Daemon) Wait() []error {
+	err1 := <-d.Error
+	err2 := <-d.Error
+	return []error{err1, err2}
 }
 
 func NewDaemon() *Daemon {
@@ -63,6 +72,6 @@ func NewDaemon() *Daemon {
 
 	daemon.Proxy = proxy
 	daemon.API = api
-	daemon.Error = make(chan error)
+	daemon.Error = make(chan error, 2)
 	return daemon
 }

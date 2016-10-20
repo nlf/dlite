@@ -9,10 +9,12 @@ type daemonCommand struct{}
 func (c *daemonCommand) Run(args []string) int {
 	d := NewDaemon()
 	d.Start()
-	err := d.Wait()
-	if err != nil && err.Error() != "Shutting down privileged daemon" {
-		ui.Error(err.Error())
-		return 1
+	errs := d.Wait()
+	for _, err := range errs {
+		if err != nil && err.Error() != "Shutting down privileged daemon" {
+			ui.Error(err.Error())
+			return 1
+		}
 	}
 
 	return 0
