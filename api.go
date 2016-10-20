@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 )
 
 type API struct {
@@ -118,8 +119,9 @@ func (a *API) Listen() error {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
+	loggedMux := newLoggedHandler(mux, os.Stdout)
 	server := &http.Server{
-		Handler: mux,
+		Handler: loggedMux,
 	}
 
 	return server.Serve(listener)
