@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-func getHostAddress() (string, error) {
-	rawAddr, err := getNetAddress()
+func getNetAddress() (string, error) {
+	rawAddr, err := getHostAddress()
 	if err != nil {
 		return "", err
 	}
@@ -22,7 +22,7 @@ func getHostAddress() (string, error) {
 	return addr.Mask(mask).String(), nil
 }
 
-func getNetAddress() (string, error) {
+func getHostAddress() (string, error) {
 	addr, err := exec.Command("defaults", "read", "/Library/Preferences/SystemConfiguration/com.apple.vmnet.plist", "Shared_Net_Address").Output()
 	if err != nil {
 		return "", err
