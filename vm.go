@@ -20,6 +20,19 @@ var (
 	ipMatcher    = regexp.MustCompile(`(?s).*ip_address=([0-9\.]+)`)
 )
 
+type VMStatusError struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
+type VMStatus struct {
+	Config
+
+	Started bool   `json:"started"`
+	IP      string `json:"ip"`
+	Pid     int    `json:"pid"`
+}
+
 type VM struct {
 	Config  Config
 	Owner   *User
@@ -171,6 +184,40 @@ func (vm *VM) Address() (*net.TCPAddr, error) {
 	}
 
 	return net.ResolveTCPAddr("tcp", ip+":2375")
+}
+
+func (vm *VM) Status() (VMStatus, error) {
+	status := VMStatus{}
+	cfg, err := readConfig(getPath(*vm.Owner))
+	if err != nil {
+		return status, err
+	}
+
+	status.Config = cfg
+
+	if vm.Process != nil {
+		ip, err := vm.IP()
+		if err != nil {
+			return status, nil
+		}
+
+		status.IP = ip
+		status.Started = true
+		status.Pid = vm.Process.Process.Pid
+	}
+
+	return status, nil
+}
+
+func EmptyStatus(owner User) (VMStatus, error) {
+	status := VMStatus{}
+	cfg, err := readConfig(getPath(owner))
+	if err != nil {
+		return status, err
+	}
+
+	status.Config = cfg
+	return status, nil
 }
 
 func NewVM(owner *User) (*VM, error) {

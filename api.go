@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -55,7 +56,7 @@ func (a *API) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Virtual machine starting, tty available at %s", a.daemon.VM.TTY)))
+	w.Write([]byte(fmt.Sprintf("Virtual machine started, tty available at %s", a.daemon.VM.TTY)))
 }
 
 func (a *API) started(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +96,66 @@ func (a *API) stop(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Virtual machine shut down"))
 }
 
+func (a *API) status(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if a.daemon.VM == nil {
+		user, err := extractUser(r)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("\"message\": \"Unauthorized\""))
+			return
+		}
+
+		status, err := EmptyStatus(*user)
+		if err != nil {
+			statusErr := VMStatusError{
+				Status:  "error",
+				Message: err.Error(),
+			}
+			js, _ := json.Marshal(statusErr)
+
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(js)
+			return
+		}
+
+		js, _ := json.Marshal(status)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(js)
+		return
+	}
+
+	status, err := a.daemon.VM.Status()
+	if err != nil {
+		statusErr := VMStatusError{
+			Status:  "error",
+			Message: err.Error(),
+		}
+		js, _ := json.Marshal(statusErr)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(js)
+		return
+	}
+
+	js, err := json.Marshal(status)
+	if err != nil {
+		statusErr := VMStatusError{
+			Status:  "error",
+			Message: err.Error(),
+		}
+		js, _ := json.Marshal(statusErr)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(js)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(js)
+}
+
 func (a *API) Listen() error {
 	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:1050")
 	if err != nil {
@@ -115,6 +176,7 @@ func (a *API) Listen() error {
 	mux.HandleFunc("/start", a.start)
 	mux.HandleFunc("/started", a.started)
 	mux.HandleFunc("/stop", a.stop)
+	mux.HandleFunc("/status", a.status)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})

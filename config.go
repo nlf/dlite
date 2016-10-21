@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	Id       string
-	Hostname string
-	Disk     int
-	DiskPath string
-	Cpu      int
-	Memory   int
-	DNS      string
-	Docker   string
-	Extra    string
+	Id       string `json:"id"`
+	Hostname string `json:"hostname"`
+	Disk     int    `json:"disk_size"`
+	DiskPath string `json:"disk_path"`
+	Cpu      int    `json:"cpu_cores"`
+	Memory   int    `json:"memory"`
+	DNS      string `json:"dns_server"`
+	Docker   string `json:"docker_version"`
+	Extra    string `json:"docker_args"`
 }
 
 func readConfig(path string) (Config, error) {

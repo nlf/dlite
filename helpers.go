@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -116,4 +119,25 @@ func spin(prefix string, f func() error) error {
 		fmt.Printf("\r%s: done\n", prefix)
 	}
 	return err
+}
+
+func getRequestError(err error) string {
+	urlError, ok := err.(*url.Error)
+	if ok {
+		netError, ok := urlError.Err.(*net.OpError)
+		if ok {
+			sysError, ok := netError.Err.(*os.SyscallError)
+			if ok {
+				if sysError.Err == syscall.ECONNREFUSED {
+					return "Connection refused - is the dlite daemon running?"
+				}
+			}
+
+			if netError.Timeout() {
+				return "Request timed out, please try again"
+			}
+		}
+	}
+
+	return err.Error()
 }
