@@ -11,8 +11,8 @@ before_install:
 
 install:
   - eval `opam config env`
-  - opam pin add qcow-format git://github.com/mirage/ocaml-qcow#master
-  - opam install uri qcow-format
+  - opam pin add -y qcow-format git://github.com/mirage/ocaml-qcow#master
+  - opam install -y uri qcow-format
   - export GOPATH=$TRAVIS_BUILD_DIR
     go get -u github.com/jteeuwen/go-bindata/...
   - export BUILD_PATH=$TRAVIS_BUILD_DIR/src/github.com/nlf/dlite
