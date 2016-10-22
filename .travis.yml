@@ -1,22 +1,20 @@
-# Force OS X.
-language: objective-c
-matrix:
-  include:
-    - env: OSX=10.11
-      os: osx
-      osx_image: xcode7.2
-    - env: OSX=10.10
-      os: osx
-      osx_image: xcode7.1
+os: osx
+language: go
+osx_image: xcode8
 
 before_install:
-   - go version
-#  If we wanted to have the newest go version:
-#  - brew update
-#  - brew outdated go || brew upgrade go
+  - brew update
+  - brew outdated golang || brew upgrade golang
+  - brew install opam
+  - opam init -y
+  - go version
 
 install:
+  - eval `opam config env`
+  - opam pin add qcow-format git://github.com/mirage/ocaml-qcow#master
+  - opam install uri qcow-format
   - export GOPATH=$TRAVIS_BUILD_DIR
+    go get -u github.com/jteeuwen/go-bindata/...
   - export BUILD_PATH=$TRAVIS_BUILD_DIR/src/github.com/nlf/dlite
   - mkdir -p $BUILD_PATH
   - shopt -s extglob dotglob
@@ -25,8 +23,9 @@ install:
 
 script:
   - cd $BUILD_PATH
-  - make dlite
-  - ./dlite version
+  - go generate
+  - go build
+  - ./dlite
 
 notifications:
   email:
