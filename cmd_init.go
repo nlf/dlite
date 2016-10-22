@@ -110,6 +110,14 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
+	err = spin("Creating ssh key pair", func() error {
+		return generateKeys(currentUser)
+	})
+	if err != nil {
+		ui.Error(err.Error())
+		return 1
+	}
+
 	err = spin("Creating tool binaries", func() error {
 		err := os.MkdirAll(binPath, 0755)
 		if err != nil {

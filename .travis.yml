@@ -18,7 +18,7 @@ install:
 script:
   - go generate
   - go build
-  - ./dlite
+  - ./dlite --version || true
 
 notifications:
   email:
