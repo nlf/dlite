@@ -158,6 +158,14 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
+	err = spin("Setting up DNS", func() error {
+		return InstallResolver(cfg.Hostname)
+	})
+	if err != nil {
+		ui.Error(err.Error())
+		return 1
+	}
+
 	err = spin("Setting up NFS", func() error {
 		return ensureNFS(currentUser)
 	})

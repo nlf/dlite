@@ -39,3 +39,16 @@ func getNetMask() (string, error) {
 
 	return strings.TrimSpace(string(mask)), nil
 }
+
+func getDomain(hostname string) string {
+	var domain string
+
+	lastDot := strings.LastIndex(hostname, ".")
+	if lastDot > -1 {
+		domain = hostname[lastDot+1:]
+	} else {
+		domain = hostname
+	}
+
+	return domain
+}

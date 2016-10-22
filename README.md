@@ -30,8 +30,7 @@ go build
 
 ## TODO
 
-- write `net.go` to find proper subnet/ip for host, and lookup ip for vm. also figure out dns/hosts file/sshconfig (which is best?)
-- write `ssh.go` to create keypair for vm
+- write a method to add ssh configuration for the vm
 - write `cmd_ssh.go` as a shortcut to ssh to vm
 - write `cmd_tty.go` as a shortcut to open a screen terminal to the vm
 - figure out how to integrate with brew services

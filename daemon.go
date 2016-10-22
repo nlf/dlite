@@ -11,6 +11,7 @@ type Daemon struct {
 	Proxy *Proxy
 	API   *API
 	VM    *VM
+	DNS   *DNS
 	Error chan error
 }
 
@@ -48,6 +49,13 @@ func (d *Daemon) Start() {
 			}
 		}
 	}()
+
+	go func() {
+		err := d.DNS.Start()
+		if err != nil {
+			d.Shutdown()
+		}
+	}()
 }
 
 func (d *Daemon) Shutdown() {
@@ -56,6 +64,7 @@ func (d *Daemon) Shutdown() {
 	}
 	d.Proxy.Stop()
 	d.API.Stop()
+	d.DNS.Stop()
 	d.Error <- fmt.Errorf("Shutting down privileged daemon")
 }
 
@@ -69,9 +78,11 @@ func NewDaemon() *Daemon {
 	daemon := &Daemon{}
 	proxy := NewProxy(daemon)
 	api := NewAPI(daemon)
+	dns := NewDNS(daemon)
 
 	daemon.Proxy = proxy
 	daemon.API = api
+	daemon.DNS = dns
 	daemon.Error = make(chan error, 2)
 	return daemon
 }
