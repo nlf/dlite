@@ -13,16 +13,9 @@ install:
   - eval `opam config env`
   - opam pin add -y qcow-format git://github.com/mirage/ocaml-qcow#master
   - opam install -y uri qcow-format
-  - export GOPATH=$TRAVIS_BUILD_DIR
   - go get -u github.com/jteeuwen/go-bindata/...
-  - export BUILD_PATH=$TRAVIS_BUILD_DIR/src/github.com/nlf/dlite
-  - mkdir -p $BUILD_PATH
-  - shopt -s extglob dotglob
-  - mv !(src) $BUILD_PATH
-  - shopt -u extglob dotglob
 
 script:
-  - cd $BUILD_PATH
   - go generate
   - go build
   - ./dlite
