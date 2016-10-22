@@ -150,6 +150,16 @@ func (c *initCommand) Run(args []string) int {
 		return 1
 	}
 
+	err = spin("Setting up NFS", func() error {
+		return ensureNFS(currentUser)
+	})
+	if err != nil {
+		ui.Error(err.Error())
+		ui.Error("Initialization finished even though there was a problem. Once the problem is resolved you can start your vm with 'dlite start'")
+		return 1
+	}
+
+	ui.Info("Initialization complete. You can start your vm with 'dlite start'")
 	return 0
 }
 

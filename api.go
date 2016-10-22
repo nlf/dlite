@@ -42,12 +42,6 @@ func (a *API) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ensureNFS(*user)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-	}
-
 	a.daemon.VM, err = NewVM(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
