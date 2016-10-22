@@ -1,17 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"syscall"
-	"time"
 
-	"github.com/briandowns/spinner"
+	"github.com/kardianos/osext"
+	"github.com/urfave/cli"
 )
 
 type User struct {
@@ -48,19 +52,19 @@ func lookupUser(username string) (*User, error) {
 func getUser() User {
 	currentUser, err := user.Current()
 	if err != nil {
-		ui.Error(err.Error())
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	uid, err := strconv.Atoi(currentUser.Uid)
 	if err != nil {
-		ui.Error(err.Error())
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	gid, err := strconv.Atoi(currentUser.Gid)
 	if err != nil {
-		ui.Error(err.Error())
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -74,51 +78,6 @@ func getUser() User {
 
 func getPath(user User) string {
 	return filepath.Join(user.Home, "._dlite")
-}
-
-func promptString(question, def string) (string, error) {
-	prompt := fmt.Sprintf("%s:", question)
-	if def != "" {
-		prompt += fmt.Sprintf(" [%s]", def)
-	}
-	res, err := ui.Ask(prompt)
-	if err != nil {
-		return "", err
-	}
-
-	if res == "" {
-		return def, nil
-	}
-
-	return res, nil
-}
-
-func promptInt(question string, def int) (int, error) {
-	prompt := fmt.Sprintf("%s: [%d]", question, def)
-	res, err := ui.Ask(prompt)
-	if err != nil {
-		return -1, err
-	}
-
-	if res == "" {
-		return def, nil
-	}
-
-	return strconv.Atoi(res)
-}
-
-func spin(prefix string, f func() error) error {
-	spin := spinner.New(spinner.CharSets[9], time.Millisecond*100)
-	spin.Prefix = fmt.Sprintf("%s: ", prefix)
-	spin.Start()
-	err := f()
-	spin.Stop()
-	if err != nil {
-		fmt.Printf("\r%s: ERROR!\n", prefix)
-	} else {
-		fmt.Printf("\r%s: done\n", prefix)
-	}
-	return err
 }
 
 func getRequestError(err error) string {
@@ -140,4 +99,93 @@ func getRequestError(err error) string {
 	}
 
 	return err.Error()
+}
+
+func statusRequest() (*VMStatus, *cli.ExitError) {
+	user := getUser()
+	req, err := http.NewRequest("GET", "http://127.0.0.1:1050/status", nil)
+	if err != nil {
+		return nil, cli.NewExitError(err.Error(), 1)
+	}
+
+	req.Header.Add("X-Username", user.Name)
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, cli.NewExitError(getRequestError(err), 1)
+	}
+
+	defer res.Body.Close()
+	decoder := json.NewDecoder(res.Body)
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		status := VMStatusError{}
+		err := decoder.Decode(&status)
+		if err != nil {
+			return nil, cli.NewExitError(err.Error(), 1)
+		}
+
+		return nil, cli.NewExitError(status.Message, 1)
+	}
+
+	status := VMStatus{}
+	err = decoder.Decode(&status)
+	if err != nil {
+		return nil, cli.NewExitError(err.Error(), 1)
+	}
+
+	return &status, nil
+}
+
+func stringRequest(action string) *cli.ExitError {
+	user := getUser()
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://127.0.0.1:1050/%s", action), nil)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	req.Header.Add("X-Username", user.Name)
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	code := 0
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		code = 1
+	}
+
+	return cli.NewExitError(string(body), code)
+}
+
+func runSetup(hostname, home string) *cli.ExitError {
+	exe, err := osext.Executable()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	output, err := exec.Command("sudo", exe, "--hostname", hostname, "--home", home).Output()
+	code := 0
+	if err != nil {
+		code = 1
+	}
+	return cli.NewExitError(string(output), code)
+}
+
+func ensureRoot() *cli.ExitError {
+	if uid := os.Geteuid(); uid != 0 {
+		return cli.NewExitError("This command requires sudo", 1)
+	}
+
+	if uid := os.Getenv("SUDO_UID"); uid == "" {
+		return cli.NewExitError("This command requires sudo", 1)
+	}
+
+	return nil
 }

@@ -3,18 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "gNO0JNpLzYOdInGeq7HqMZUzx9M=",
-			"path": "github.com/armon/go-radix",
-			"revision": "4239b77079c7b5d1243b7b4736304ce8ddb6f0f2",
-			"revisionTime": "2016-01-15T23:47:25Z"
-		},
-		{
-			"checksumSHA1": "ta8SSP0z1c4mWWiJc9srvj2WirE=",
-			"path": "github.com/bgentry/speakeasy",
-			"revision": "a1ccbf2c40dfc8ce514b5c5c6e6d1429ea6880da",
-			"revisionTime": "2016-08-13T19:06:34Z"
-		},
-		{
 			"checksumSHA1": "Oae/AzW8+W/lPdL6smTcgyhncrc=",
 			"path": "github.com/blang/semver",
 			"revision": "60ec3488bfea7cca02b021d106d9911120d25fe9",
@@ -39,6 +27,12 @@
 			"revisionTime": "2015-10-03T19:46:02Z"
 		},
 		{
+			"checksumSHA1": "g+afVQQVopBLiLB5pFZp/8s6aBs=",
+			"path": "github.com/kardianos/osext",
+			"revision": "c2c54e542fb797ad986b31721e1baedf214ca413",
+			"revisionTime": "2016-08-11T00:15:26Z"
+		},
+		{
 			"checksumSHA1": "ugnSryGF6VPBb5s87QgoRH6730g=",
 			"path": "github.com/mattn/go-colorable",
 			"revision": "6c903ff4aa50920ca86087a280590b36b3152b9c",
@@ -57,12 +51,6 @@
 			"revisionTime": "2016-10-18T06:08:08Z"
 		},
 		{
-			"checksumSHA1": "7niW29CvYceZ6zbia6b/LT+yD/M=",
-			"path": "github.com/mitchellh/cli",
-			"revision": "fcf521421aa29bde1d93b6920dfce826d7932208",
-			"revisionTime": "2016-08-15T18:46:15Z"
-		},
-		{
 			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
 			"path": "github.com/satori/go.uuid",
 			"revision": "0aa62d5ddceb50dbcb909d790b5345affd3669b6",
@@ -73,6 +61,12 @@
 			"path": "github.com/tsuru/config",
 			"revision": "66463741517827f979a47fbfc05299199c0ced13",
 			"revisionTime": "2016-09-09T01:02:41Z"
+		},
+		{
+			"checksumSHA1": "VzCBWaUbB+sJ7NvGf1TMPoxcqSE=",
+			"path": "github.com/urfave/cli",
+			"revision": "6f2647a880e25bd7178ab4bbf1f4045ac256cc57",
+			"revisionTime": "2016-10-22T17:29:59Z"
 		},
 		{
 			"checksumSHA1": "MGk7cSnHqiL5soaovzgcJaNH3fc=",

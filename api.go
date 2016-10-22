@@ -56,7 +56,8 @@ func (a *API) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Virtual machine started, tty available at %s", a.daemon.VM.TTY)))
+	w.WriteHeader(http.StatusOK)
+	// w.Write([]byte(fmt.Sprintf("Virtual machine started, tty available at %s", a.daemon.VM.TTY)))
 }
 
 func (a *API) started(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +94,9 @@ func (a *API) stop(w http.ResponseWriter, r *http.Request) {
 	a.daemon.VM.Ready = false
 	a.daemon.VM.Stop()
 	a.daemon.VM = nil
-	w.Write([]byte("Virtual machine shut down"))
+
+	w.WriteHeader(http.StatusOK)
+	// w.Write([]byte("Virtual machine shut down"))
 }
 
 func (a *API) status(w http.ResponseWriter, r *http.Request) {

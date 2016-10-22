@@ -20,7 +20,6 @@ func (d *Daemon) Start() {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	go func() {
 		<-shutdown
-		ui.Info("Got a shutdown signal, halting daemon")
 		d.Shutdown()
 	}()
 
@@ -28,7 +27,6 @@ func (d *Daemon) Start() {
 		err := d.Proxy.Listen()
 		if err != nil {
 			if err.Error() != "Server closed" {
-				ui.Error(err.Error())
 				d.Error <- err
 				d.Shutdown()
 			} else {
@@ -41,7 +39,6 @@ func (d *Daemon) Start() {
 		err := d.API.Listen()
 		if err != nil {
 			if err.Error() != "Server closed" {
-				ui.Error(err.Error())
 				d.Error <- err
 				d.Shutdown()
 			} else {

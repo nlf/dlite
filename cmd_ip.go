@@ -1,66 +1,26 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
+	"fmt"
 
-	"github.com/mitchellh/cli"
+	"github.com/urfave/cli"
 )
 
-type ipCommand struct{}
+var ipCommand = cli.Command{
+	Name:        "ip",
+	Usage:       "display the virtual machine's IP",
+	Description: "lookup and print the IP address of the virtual machine",
+	Action: func(ctx *cli.Context) error {
+		status, err := statusRequest()
+		if err != nil {
+			return err
+		}
 
-func (c *ipCommand) Run(args []string) int {
-	user := getUser()
+		if !status.Started {
+			return cli.NewExitError("Virtual machine not running", 1)
+		}
 
-	req, err := http.NewRequest("GET", "http://127.0.0.1:1050/status", nil)
-	if err != nil {
-		ui.Error(err.Error())
-		return 1
-	}
-
-	req.Header.Add("X-Username", user.Name)
-
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		ui.Error(err.Error())
-		return 1
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		ui.Error(err.Error())
-		return 1
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 400 {
-		status := VMStatusError{}
-		json.Unmarshal(body, &status)
-		ui.Error(status.Message)
-		return 1
-	}
-
-	status := VMStatus{}
-	err = json.Unmarshal(body, &status)
-	if err != nil {
-		ui.Error(err.Error())
-		return 1
-	}
-
-	ui.Output(status.IP)
-	return 0
-}
-
-func (c *ipCommand) Synopsis() string {
-	return "get the ip of the virtual machine"
-}
-
-func (c *ipCommand) Help() string {
-	return "returns the ip address of the virtual machine"
-}
-
-func ipFactory() (cli.Command, error) {
-	return &ipCommand{}, nil
+		fmt.Println(status.IP)
+		return nil
+	},
 }

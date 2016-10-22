@@ -93,7 +93,7 @@ func NewDNS(daemon *Daemon) *DNS {
 	}
 }
 
-func InstallResolver(hostname string) error {
+func installResolver(hostname string) error {
 	err := os.MkdirAll("/etc/resolver", 0755)
 	if err != nil {
 		return err

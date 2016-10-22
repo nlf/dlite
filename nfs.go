@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ensureNFS(user User) error {
+func ensureNFS(home string) error {
 	addr, err := getNetAddress()
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func ensureNFS(user User) error {
 		return err
 	}
 
-	export := fmt.Sprintf("%s -network %s -mask %s -alldirs -maproot=root:wheel", user.Home, addr, mask)
+	export := fmt.Sprintf("%s -network %s -mask %s -alldirs -maproot=root:wheel", home, addr, mask)
 
 	if _, err = os.Stat("/etc/exports"); os.IsNotExist(err) {
 		err := ioutil.WriteFile("/etc/exports", []byte(""), 0644)
