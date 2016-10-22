@@ -30,6 +30,8 @@ go build
 
 ## TODO
 
+- refactor the cli stuff because what i have now kinda sucks, need hidden commands for special processes
+- add a method to allow running installation steps as root (nfs and dns setup need this)
 - write a method to add ssh configuration for the vm
 - write `cmd_ssh.go` as a shortcut to ssh to vm
 - write `cmd_tty.go` as a shortcut to open a screen terminal to the vm
