@@ -33,4 +33,4 @@ go build
 - write a method to add ssh configuration for the vm
 - write `cmd_ssh.go` as a shortcut to ssh to vm
 - write `cmd_tty.go` as a shortcut to open a screen terminal to the vm
-- figure out how to integrate with brew services
+- write a template plist for the daemon and install it in the privileged setup
