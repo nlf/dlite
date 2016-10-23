@@ -170,7 +170,7 @@ func runSetup(hostname, home string) *cli.ExitError {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	output, err := exec.Command("sudo", exe, "--hostname", hostname, "--home", home).Output()
+	output, err := exec.Command("sudo", exe, "setup", "--hostname", hostname, "--home", home).Output()
 	code := 0
 	if err != nil {
 		code = 1

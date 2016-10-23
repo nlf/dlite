@@ -31,6 +31,8 @@ var initCommand = cli.Command{
 			}
 		}
 
+		fmt.Println("")
+
 		err = os.RemoveAll(configPath)
 		if err != nil {
 			return cli.NewExitError(err.Error(), 1)
@@ -55,25 +57,23 @@ var initCommand = cli.Command{
 
 		cfg.DNS = askString("DNS server", host)
 		cfg.Docker = askString("Docker version", "latest")
-		cfg.Extra = askString("Extra flags to pass to the docker daemon", "")
+		cfg.Extra = ask("Extra flags to pass to the docker daemon")
 
 		fmt.Println("")
 
-		err = spin("Saving configuration", func() error {
+		if err := spin("Saving configuration", func() error {
 			return writeConfig(configPath, cfg)
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		err = spin("Creating ssh key pair", func() error {
+		if err := spin("Creating ssh key pair", func() error {
 			return generateKeys(currentUser)
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		err = spin("Creating tool binaries", func() error {
+		if err := spin("Creating tool binaries", func() error {
 			err := os.MkdirAll(binPath, 0755)
 			if err != nil {
 				return err
@@ -91,25 +91,24 @@ var initCommand = cli.Command{
 			}
 
 			return nil
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		err = spin("Creating disk", func() error {
+		if err := spin("Creating disk", func() error {
 			return buildDisk(filepath.Join(binPath, "qcow-tool"), diskFile, cfg.Disk, currentUser.Uid, currentUser.Gid)
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		err = spin("Downloading OS", func() error {
+		if err := spin("Downloading OS", func() error {
 			return downloadOS(configPath)
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
+		fmt.Println("")
+		fmt.Println("Next we'll run a few steps that require sudo, you may be prompted for your password.")
 		return runSetup(cfg.Hostname, currentUser.Home)
 	},
 }

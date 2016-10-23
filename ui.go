@@ -18,7 +18,7 @@ func ask(question string) string {
 }
 
 func askString(question, def string) string {
-	prompt := fmt.Sprintf("%s:", question)
+	prompt := question
 	if def != "" {
 		prompt += fmt.Sprintf(" [%s]", def)
 	}
@@ -31,7 +31,7 @@ func askString(question, def string) string {
 }
 
 func askInt(question string, def int) int {
-	prompt := fmt.Sprintf("%s: [%d]", question, def)
+	prompt := fmt.Sprintf("%s [%d]", question, def)
 	res := ask(prompt)
 	if res == "" {
 		return def
@@ -66,23 +66,19 @@ func spin(prefix string, f func() error) *cli.ExitError {
 	spin.Stop()
 	if err != nil {
 		cliError, ok := err.(*cli.ExitError)
-		if !ok || cliError.ExitCode() > 0 {
-			fmt.Printf("\r%s: ERROR!\n", prefix)
-		} else {
-			fmt.Printf("\r%s: done\n", prefix)
-		}
-	} else {
-		fmt.Printf("\r%s: done\n", prefix)
-	}
-
-	if err != nil {
-		cliError, ok := err.(*cli.ExitError)
 		if ok {
-			return cliError
-		}
+			if cliError.ExitCode() != 0 {
+				fmt.Printf("\r%s: ERROR!\n", prefix)
+				return cliError
+			}
 
+			fmt.Printf("\r%s: done\n", prefix)
+			return cli.NewExitError("", 0)
+		}
+		fmt.Printf("\r%s: ERROR!\n", prefix)
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	return nil
+	fmt.Printf("\r%s: done\n", prefix)
+	return cli.NewExitError("", 0)
 }

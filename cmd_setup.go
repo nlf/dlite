@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/urfave/cli"
 )
 
@@ -25,20 +27,20 @@ var setupCommand = cli.Command{
 		if hostname == "" {
 			return cli.NewExitError("Must specify hostname", 1)
 		}
+		domain := getDomain(hostname)
 
 		home := ctx.String("home")
 		if home == "" {
 			return cli.NewExitError("Must specify home", 1)
 		}
 
-		err = spin("Setting up DNS", func() error {
+		if err := spin(fmt.Sprintf("Creating /etc/resolver/%s", domain), func() error {
 			return installResolver(hostname)
-		})
-		if err != nil {
+		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		return spin("Setting up NFS", func() error {
+		return spin("Modifying /etc/exports", func() error {
 			return ensureNFS(home)
 		})
 	},
