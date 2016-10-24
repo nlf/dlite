@@ -19,7 +19,7 @@ func (d *DNS) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 	msg := &dns.Msg{}
 	msg.SetReply(r)
 
-	if d.daemon.VM != nil {
+	if d.daemon.VM == nil {
 		msg.SetRcode(r, dns.RcodeNameError)
 		w.WriteMsg(msg)
 		return
