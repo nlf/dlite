@@ -40,8 +40,14 @@ var setupCommand = cli.Command{
 			return err
 		}
 
-		return spin("Modifying /etc/exports", func() error {
+		if err := spin("Modifying /etc/exports", func() error {
 			return ensureNFS(home)
+		}); err.ExitCode() != 0 {
+			return err
+		}
+
+		return spin("Installing daemon", func() error {
+			return installDaemon()
 		})
 	},
 }

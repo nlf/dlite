@@ -30,4 +30,4 @@ go build
 
 ## TODO
 
-- write a template plist for the daemon and install it in the privileged setup
+- write uninstall command to remove daemon plist, resolver config, nfs exports, ssh config, and user's instance

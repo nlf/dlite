@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/kardianos/osext"
 )
 
 type Daemon struct {
@@ -82,4 +86,38 @@ func NewDaemon() *Daemon {
 	daemon.DNS = dns
 	daemon.Error = make(chan error, 2)
 	return daemon
+}
+
+const template = `
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+	  <key>Label</key>
+		<string>local.dlite</string>
+		<key>ProgramArguments</key>
+		<array>
+		  <string>%s</string>
+			<string>daemon</string>
+		</array>
+		<key>RunAtLoad</key>
+		<true/>
+  </dict>
+</plist>
+`
+
+func installDaemon() error {
+	plistPath := "/Library/LaunchDaemons/local.dlite.plist"
+	exe, err := osext.Executable()
+	if err != nil {
+		return err
+	}
+
+	plist := fmt.Sprintf(template, exe)
+	err = ioutil.WriteFile(plistPath, []byte(plist), 0644)
+	if err != nil {
+		return err
+	}
+
+	return exec.Command("launchctl", "load", plistPath).Run()
 }
