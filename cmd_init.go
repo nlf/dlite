@@ -73,6 +73,12 @@ var initCommand = cli.Command{
 			return err
 		}
 
+		if err := spin("Adding host to ssh config", func() error {
+			return addSSHConfig(currentUser, cfg.Hostname)
+		}); err.ExitCode() != 0 {
+			return err
+		}
+
 		if err := spin("Creating tool binaries", func() error {
 			err := os.MkdirAll(binPath, 0755)
 			if err != nil {
