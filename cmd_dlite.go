@@ -23,6 +23,8 @@ func main() {
 		stopCommand,
 		statusCommand,
 		ipCommand,
+		sshCommand,
+		ttyCommand,
 	}
 
 	app.Run(os.Args)

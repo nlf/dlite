@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -20,6 +21,11 @@ var ttyCommand = cli.Command{
 		fmt.Println("When you're finished press Ctrl+A then D to exit")
 		fmt.Println("")
 		ttyPath := filepath.Join(getPath(currentUser), "vm.tty")
+		cmd := exec.Command("screen", ttyPath)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
 		err := exec.Command("screen", ttyPath).Run()
 		if err != nil {
 			return cli.NewExitError("Failed to get a terminal, is your virtual machine running?", 1)
