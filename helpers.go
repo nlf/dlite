@@ -77,7 +77,7 @@ func getUser() User {
 }
 
 func getPath(user User) string {
-	return filepath.Join(user.Home, "._dlite")
+	return filepath.Join(user.Home, ".dlite")
 }
 
 func getRequestError(err error) string {
