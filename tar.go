@@ -24,11 +24,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	hostname := []byte(cfg.Hostname)
 	hostnameHeader := &tar.Header{
-		Name:  "/etc/hostname",
-		Mode:  0644,
-		Size:  int64(len(hostname)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/hostname",
+		Mode: 0644,
+		Size: int64(len(hostname)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(hostnameHeader)
@@ -43,11 +43,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	hosts := []byte(fmt.Sprintf("127.0.0.1 localhost %s", cfg.Hostname))
 	hostsHeader := &tar.Header{
-		Name:  "/etc/hosts",
-		Mode:  0644,
-		Size:  int64(len(hosts)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/hosts",
+		Mode: 0644,
+		Size: int64(len(hosts)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(hostsHeader)
@@ -62,11 +62,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	ifaces := []byte(fmt.Sprintf("auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp\nhostname %s", cfg.Id))
 	ifacesHeader := &tar.Header{
-		Name:  "/etc/network/interfaces",
-		Mode:  0644,
-		Size:  int64(len(ifaces)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/network/interfaces",
+		Mode: 0644,
+		Size: int64(len(ifaces)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(ifacesHeader)
@@ -81,11 +81,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	dns := []byte(fmt.Sprintf("nameserver %s", cfg.DNS))
 	dnsHeader := &tar.Header{
-		Name:  "/etc/resolv.conf",
-		Mode:  0644,
-		Size:  int64(len(dns)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/resolv.conf",
+		Mode: 0644,
+		Size: int64(len(dns)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(dnsHeader)
@@ -105,11 +105,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	hostIpBytes := []byte(hostIp)
 	hostIpHeader := &tar.Header{
-		Name:  "/etc/dlite/host_ip",
-		Mode:  0600,
-		Size:  int64(len(hostIpBytes)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/dlite/host_ip",
+		Mode: 0600,
+		Size: int64(len(hostIpBytes)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(hostIpHeader)
@@ -124,11 +124,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	username := []byte(user.Name)
 	usernameHeader := &tar.Header{
-		Name:  "/etc/dlite/username",
-		Mode:  0600,
-		Size:  int64(len(username)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/dlite/username",
+		Mode: 0600,
+		Size: int64(len(username)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(usernameHeader)
@@ -143,11 +143,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	userId := []byte(fmt.Sprintf("%d", user.Uid))
 	userIdHeader := &tar.Header{
-		Name:  "/etc/dlite/userid",
-		Mode:  0600,
-		Size:  int64(len(userId)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/dlite/userid",
+		Mode: 0600,
+		Size: int64(len(userId)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(userIdHeader)
@@ -162,11 +162,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	dockerVersion := []byte(cfg.Docker)
 	dockerVersionHeader := &tar.Header{
-		Name:  "/etc/dlite/docker_version",
-		Mode:  0600,
-		Size:  int64(len(dockerVersion)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/dlite/docker_version",
+		Mode: 0600,
+		Size: int64(len(dockerVersion)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(dockerVersionHeader)
@@ -181,11 +181,11 @@ func generateTarball(user User) ([]byte, error) {
 
 	dockerArgs := []byte(cfg.Extra)
 	dockerArgsHeader := &tar.Header{
-		Name:  "/etc/dlite/docker_args",
-		Mode:  0600,
-		Size:  int64(len(dockerArgs)),
-		Uname: "root",
-		Gname: "wheel",
+		Name: "/etc/dlite/docker_args",
+		Mode: 0600,
+		Size: int64(len(dockerArgs)),
+		Uid:  0,
+		Gid:  10,
 	}
 
 	err = tarball.WriteHeader(dockerArgsHeader)
@@ -202,8 +202,8 @@ func generateTarball(user User) ([]byte, error) {
 		Name:     "/home/docker/.ssh",
 		Mode:     0700,
 		Typeflag: tar.TypeDir,
-		Uname:    "docker",
-		Gname:    "docker",
+		Uid:      1000,
+		Gid:      1000,
 	}
 
 	err = tarball.WriteHeader(sshDirHeader)
@@ -222,11 +222,11 @@ func generateTarball(user User) ([]byte, error) {
 	}
 
 	keysHeader := &tar.Header{
-		Name:  "/home/docker/.ssh/authorized_keys",
-		Mode:  0600,
-		Size:  keyStat.Size(),
-		Uname: "docker",
-		Gname: "docker",
+		Name: "/home/docker/.ssh/authorized_keys",
+		Mode: 0600,
+		Size: keyStat.Size(),
+		Uid:  1000,
+		Gid:  1000,
 	}
 
 	err = tarball.WriteHeader(keysHeader)
