@@ -30,5 +30,4 @@ go build
 
 ## TODO
 
-- write `cmd_ssh.go` as a shortcut to ssh to vm
 - write a template plist for the daemon and install it in the privileged setup
