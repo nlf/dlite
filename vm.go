@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +21,21 @@ var (
 	nameMatcher  = regexp.MustCompile(`(?s).*name=([a-fA-F0-9\-]+)`)
 	ipMatcher    = regexp.MustCompile(`(?s).*ip_address=([0-9\.]+)`)
 )
+
+type dockerNetwork struct {
+	Driver string
+	IPAM   struct {
+		Config []struct {
+			Subnet string
+		}
+	}
+}
+
+type containerNetwork struct {
+	NetworkSettings struct {
+		IPAddress string
+	}
+}
 
 type VMStatusError struct {
 	Status  string `json:"status"`
@@ -63,7 +80,19 @@ func (vm *VM) Start() error {
 		return err
 	}
 
-	return os.Chown(filepath.Join(vm.Path, "vm.tty"), vm.Owner.Uid, vm.Owner.Gid)
+	err = os.Chown(filepath.Join(vm.Path, "vm.tty"), vm.Owner.Uid, vm.Owner.Gid)
+	if err != nil {
+		return err
+	}
+
+	if vm.Config.Route {
+		err = vm.Route()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (vm *VM) waitForBoot() error {
@@ -96,6 +125,108 @@ func (vm *VM) waitForBoot() error {
 
 		attempts++
 	}
+}
+
+func (vm *VM) Route() error {
+	subnet, err := vm.dockerSubnet()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("route", "-n", "add", subnet, vm.Config.Hostname).Run()
+	if err != nil {
+		return err
+	}
+
+	routeBytes, err := exec.Command("route", "-n", "get", vm.Config.Hostname).Output()
+	if err != nil {
+		return err
+	}
+
+	routeIfaceMatcher := regexp.MustCompile(`(?m)^\s*interface:\s*(\w+)$`)
+	routeIfaceMatches := routeIfaceMatcher.FindAllStringSubmatch(string(routeBytes), -1)
+	if routeIfaceMatches == nil {
+		return fmt.Errorf("Unable to find interface")
+	}
+
+	routeIface := routeIfaceMatches[0][1]
+
+	memberBytes, err := exec.Command("ifconfig", routeIface).Output()
+	if err != nil {
+		return err
+	}
+
+	memberMatcher := regexp.MustCompile(`(?m)^\s*member:\s*(.*) flags.*$`)
+	memberMatches := memberMatcher.FindAllStringSubmatch(string(memberBytes), -1)
+	if memberMatches == nil {
+		return fmt.Errorf("Unable to find interface members")
+	}
+
+	members := strings.Split(memberMatches[0][1], " ")
+	for _, member := range members {
+		err := exec.Command("ifconfig", routeIface, "-hostfilter", member).Run()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (vm *VM) dockerSubnet() (string, error) {
+	ip, err := vm.IP()
+	if err != nil {
+		return "", err
+	}
+
+	res, err := http.Get(fmt.Sprintf("http://%s:2375/networks?filter={\"type\":{\"builtin\":true}}", ip))
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+
+	networks := []dockerNetwork{}
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&networks)
+	if err != nil {
+		return "", err
+	}
+
+	for _, network := range networks {
+		if network.Driver == "bridge" {
+			return network.IPAM.Config[0].Subnet, nil
+		}
+	}
+
+	return "", fmt.Errorf("Unable to find bridge network")
+}
+
+func (vm *VM) findContainer(name string) (string, error) {
+	ip, err := vm.IP()
+	if err != nil {
+		return "", err
+	}
+
+	res, err := http.Get(fmt.Sprintf("http://%s:2375/containers/%s/json", ip, name))
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+
+	container := containerNetwork{}
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&container)
+	if err != nil {
+		return "", err
+	}
+
+	if container.NetworkSettings.IPAddress != "" {
+		return container.NetworkSettings.IPAddress, nil
+	}
+
+	return "", fmt.Errorf("Unable to find container")
 }
 
 func (vm *VM) Stop() error {

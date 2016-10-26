@@ -16,6 +16,7 @@ type Config struct {
 	DNS      string `json:"dns_server"`
 	Docker   string `json:"docker_version"`
 	Extra    string `json:"docker_args"`
+	Route    bool   `json:"route"`
 }
 
 func readConfig(path string) (Config, error) {
@@ -64,6 +65,11 @@ func readConfig(path string) (Config, error) {
 	}
 
 	cfg.Extra, err = config.GetString("extra")
+	if err != nil {
+		return cfg, err
+	}
+
+	cfg.Route, err = config.GetBool("route")
 	return cfg, err
 }
 
@@ -78,6 +84,7 @@ func writeConfig(path string, cfg Config) error {
 	config.Set("dns", cfg.DNS)
 	config.Set("docker", cfg.Docker)
 	config.Set("extra", cfg.Extra)
+	config.Set("route", cfg.Route)
 
 	return config.WriteConfigFile(configFile, 0644)
 }

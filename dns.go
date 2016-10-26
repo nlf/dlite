@@ -65,6 +65,26 @@ func (d *DNS) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 			}
 
 			msg.Answer = append(msg.Answer, record)
+		} else if cfg.Route {
+			cleaned := strings.TrimSuffix(q.Name, fmt.Sprintf(".%s", domain))
+			ip, err := d.daemon.VM.findContainer(cleaned)
+			if err != nil {
+				msg.SetRcode(r, dns.RcodeNameError)
+				w.WriteMsg(msg)
+				return
+			}
+
+			record := &dns.A{
+				Hdr: dns.RR_Header{
+					Name:   q.Name,
+					Rrtype: dns.TypeA,
+					Class:  dns.ClassINET,
+					Ttl:    0,
+				},
+				A: net.ParseIP(ip).To4(),
+			}
+
+			msg.Answer = append(msg.Answer, record)
 		} else {
 			msg.SetRcode(r, dns.RcodeNameError)
 		}

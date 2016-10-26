@@ -45,6 +45,22 @@ func askInt(question string, def int) int {
 	return i
 }
 
+func askBool(question string, def bool) bool {
+	prompt := fmt.Sprintf("%s [%v]", question, def)
+	res := ask(prompt)
+
+	switch strings.ToLower(res) {
+	case "yes", "y":
+		return true
+	case "no", "n":
+		return false
+	case "":
+		return def
+	default:
+		return askBool(question, def)
+	}
+}
+
 func confirm(question string) bool {
 	answer := ask(question)
 

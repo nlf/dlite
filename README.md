@@ -34,5 +34,3 @@ go build
 
 - write uninstall command to remove daemon plist, resolver config, nfs exports, ssh config, and user's instance
 - investigate what we need to support vpn users
-- add routing rules to connect direct to containers
-- look in to querying the docker daemon to allow resolving containers by name in the dns process (i.e. <container>.docker)

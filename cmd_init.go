@@ -58,6 +58,7 @@ var initCommand = cli.Command{
 		cfg.DNS = askString("DNS server", host)
 		cfg.Docker = askString("Docker version", "latest")
 		cfg.Extra = ask("Extra flags to pass to the docker daemon")
+		cfg.Route = askBool("Allow direct connections to containers", true)
 
 		fmt.Println("")
 
