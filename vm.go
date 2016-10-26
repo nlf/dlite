@@ -255,8 +255,8 @@ func NewVM(owner *User) (*VM, error) {
 			"-s", "5,virtio-rnd",
 			"-s", "31,lpc",
 			"-s", "2:0,virtio-net",
-			"-s", fmt.Sprintf("4:0,virtio-blk,file://%s,direct,format=qcow", disk),
-			"-f", fmt.Sprintf("kexec,%s,%s,earlyprintk=serial console=ttyS0 config=%s", kernel, rootfs, bootstrapData),
+			"-s", fmt.Sprintf("4:0,virtio-blk,file://%s,format=qcow", disk),
+			"-f", fmt.Sprintf("kexec,%s,%s,earlyprintk=serial console=ttyS0 no_timer_check config=%s", kernel, rootfs, bootstrapData),
 		},
 	}, nil
 }
