@@ -1,5 +1,7 @@
 # DLite
 
+this branch represents the latest *beta* version. the stable version can be found in the legacy branch.
+
 ## Building
 
 install dependencies
