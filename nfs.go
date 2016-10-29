@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -82,5 +83,39 @@ func ensureNFS(home string) error {
 	if err != nil {
 		return fmt.Errorf(string(output))
 	}
+	return nil
+}
+
+func removeNFS(home string) error {
+	addr, err := getNetAddress()
+	if err != nil {
+		return err
+	}
+
+	mask, err := getNetMask()
+	if err != nil {
+		return err
+	}
+
+	export := fmt.Sprintf("%s -network %s -mask %s -alldirs -maproot=root:wheel", home, addr, mask)
+
+	rawExports, err := ioutil.ReadFile("/etc/exports")
+	if err != nil {
+		return err
+	}
+
+	exportMatcher := regexp.MustCompile(fmt.Sprintf("(?m)^%s\n?$", export))
+	newExports := exportMatcher.ReplaceAllString(string(rawExports), "")
+
+	err = ioutil.WriteFile("/etc/exports", []byte(newExports), 0644)
+	if err != nil {
+		return err
+	}
+
+	output, err := exec.Command("nfsd", "restart").Output()
+	if err != nil {
+		return fmt.Errorf(string(output))
+	}
+
 	return nil
 }

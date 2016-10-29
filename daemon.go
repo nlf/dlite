@@ -106,8 +106,9 @@ const template = `
 </plist>
 `
 
+const plistPath = "/Library/LaunchDaemons/local.dlite.plist"
+
 func installDaemon() error {
-	plistPath := "/Library/LaunchDaemons/local.dlite.plist"
 	exe, err := osext.Executable()
 	if err != nil {
 		return err
@@ -120,4 +121,9 @@ func installDaemon() error {
 	}
 
 	return exec.Command("launchctl", "load", plistPath).Run()
+}
+
+func removeDaemon() error {
+	exec.Command("lauunchctl", "unload", plistPath).Run()
+	return os.Remove(plistPath)
 }

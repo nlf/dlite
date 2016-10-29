@@ -19,6 +19,8 @@ func main() {
 		daemonCommand,
 		setupCommand,
 		initCommand,
+		cleanupCommand,
+		uninstallCommand,
 		startCommand,
 		stopCommand,
 		statusCommand,

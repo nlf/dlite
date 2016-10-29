@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -41,5 +42,21 @@ func addSSHConfig(user User, hostname string) error {
 	keyfile := filepath.Join(getPath(user), "key")
 	newConfig := string(config)
 	newConfig += fmt.Sprintf("Host %s\n  User docker\n  IdentityFile %s", hostname, keyfile)
+	return ioutil.WriteFile(configPath, []byte(newConfig), 0644)
+}
+
+func removeSSHConfig(user User, hostname string) error {
+	configPath := filepath.Join(user.Home, ".ssh", "config")
+	config, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	keyfile := filepath.Join(getPath(user), "key")
+	hostConfig := fmt.Sprintf("Host %s\n  User docker\n  IdentityFile %s", hostname, keyfile)
+
+	hostMatcher := regexp.MustCompile(fmt.Sprintf("(?m)^%s?$", hostConfig))
+	newConfig := hostMatcher.ReplaceAllString(string(config), "")
+
 	return ioutil.WriteFile(configPath, []byte(newConfig), 0644)
 }

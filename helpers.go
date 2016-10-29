@@ -178,6 +178,20 @@ func runSetup(hostname, home string) *cli.ExitError {
 	return cli.NewExitError(string(output), code)
 }
 
+func runCleanup(hostname, home string) *cli.ExitError {
+	exe, err := osext.Executable()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	output, err := exec.Command("sudo", exe, "cleanup", "--hostname", hostname, "--home", home).Output()
+	code := 0
+	if err != nil {
+		code = 1
+	}
+	return cli.NewExitError(string(output), code)
+}
+
 func ensureRoot() *cli.ExitError {
 	if uid := os.Geteuid(); uid != 0 {
 		return cli.NewExitError("This command requires sudo", 1)

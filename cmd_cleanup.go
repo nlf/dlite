@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/urfave/cli"
 )
 
-var setupCommand = cli.Command{
-	Name:   "setup",
+var cleanupCommand = cli.Command{
+	Name:   "cleanup",
 	Hidden: true,
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -34,20 +35,20 @@ var setupCommand = cli.Command{
 			return cli.NewExitError("Must specify home", 1)
 		}
 
-		if err := spin(fmt.Sprintf("Creating /etc/resolver/%s", domain), func() error {
-			return installResolver(hostname)
+		if err := spin(fmt.Sprintf("Removing /etc/resolver/%s", domain), func() error {
+			return os.Remove(fmt.Sprintf("/etc/resolver/%s", domain))
 		}); err.ExitCode() != 0 {
 			return err
 		}
 
 		if err := spin("Modifying /etc/exports", func() error {
-			return ensureNFS(home)
+			return removeNFS(home)
 		}); err.ExitCode() != 0 {
 			return err
 		}
 
-		return spin("Creating /Library/LaunchDaemons/local.dlite.plist", func() error {
-			return installDaemon()
+		return spin("Removing /Library/LaunchDaemons/local.dlite.plist", func() error {
+			return removeDaemon()
 		})
 	},
 }
