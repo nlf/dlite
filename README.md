@@ -31,8 +31,3 @@ build the binary
 go generate
 go build
 ```
-
-## TODO
-
-- write uninstall command to remove daemon plist, resolver config, nfs exports, ssh config, and user's instance
-- investigate what we need to support vpn users
