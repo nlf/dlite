@@ -1,17 +1,13 @@
-## if you're reporting a bug, fill out this section
+## Bug Reports
 
-### dlite version in use (run `dlite --version`)
+- dlite version in use (run `dlite --version`): 
 
-### expected behavior
+- expected behavior:
 
-### actual behavior
+- actual behavior:
 
-### steps to reproduce
+- steps to reproduce
 
-## if requesting a new feature, fill out this section
+## Feature Requests
 
-### brief description of feature
-
-### how should the feature be used (i.e. config file change, added command)
-
-### briefly describe a use case
+briefly describe the new feature you'd like to see, as well as a use case that employs it. any details or references you can provide would also be helpful.
