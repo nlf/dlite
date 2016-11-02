@@ -98,11 +98,7 @@ func generateTarball(user User) ([]byte, error) {
 		return nil, err
 	}
 
-	hostIp, err := getHostAddress()
-	if err != nil {
-		return nil, err
-	}
-
+	hostIp, _ := getHostAddress()
 	hostIpBytes := []byte(hostIp)
 	hostIpHeader := &tar.Header{
 		Name: "/etc/dlite/host_ip",

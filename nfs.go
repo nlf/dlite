@@ -15,11 +15,7 @@ func ensureNFS(home string) error {
 		return err
 	}
 
-	mask, err := getNetMask()
-	if err != nil {
-		return err
-	}
-
+	mask, _ := getNetMask()
 	export := fmt.Sprintf("%s -network %s -mask %s -alldirs -maproot=root:wheel", home, addr, mask)
 
 	if _, err = os.Stat("/etc/exports"); os.IsNotExist(err) {
@@ -92,11 +88,7 @@ func removeNFS(home string) error {
 		return err
 	}
 
-	mask, err := getNetMask()
-	if err != nil {
-		return err
-	}
-
+	mask, _ := getNetMask()
 	export := fmt.Sprintf("%s -network %s -mask %s -alldirs -maproot=root:wheel", home, addr, mask)
 
 	rawExports, err := ioutil.ReadFile("/etc/exports")

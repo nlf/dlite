@@ -50,11 +50,7 @@ var initCommand = cli.Command{
 		cfg.Cpu = askInt("CPU cores to allocate to VM", 2)
 		cfg.Memory = askInt("Memory to allocate to VM (in gigabytes)", 2)
 
-		host, err := getHostAddress()
-		if err != nil {
-			return cli.NewExitError(err.Error(), 1)
-		}
-
+		host, _ := getHostAddress()
 		cfg.DNS = askString("DNS server", host)
 		cfg.Docker = askString("Docker version", "latest")
 		cfg.Extra = ask("Extra flags to pass to the docker daemon")
