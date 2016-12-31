@@ -7,11 +7,10 @@ this branch represents the latest *beta* version. the stable version can be foun
 install dependencies
 
 ```sh
-brew install opam golang
+brew install opam golang libev
 opam init
 eval `opam config env`
-opam pin add qcow-format git://github.com/mirage/ocaml-qcow#master
-opam install uri qcow-format
+opam install uri qcow.0.7.0 conf-libev logs fmt
 go get -u github.com/jteeuwen/go-bindata/...
 git submodule init
 git submodule update
