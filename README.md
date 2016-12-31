@@ -10,7 +10,7 @@ install dependencies
 brew install opam golang libev
 opam init
 eval `opam config env`
-opam install uri qcow.0.7.0 conf-libev logs fmt
+opam install uri qcow.0.7.0 conf-libev logs fmt qcow-format
 go get -u github.com/jteeuwen/go-bindata/...
 git submodule init
 git submodule update
