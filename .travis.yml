@@ -5,14 +5,13 @@ osx_image: xcode8
 before_install:
   - brew update
   - brew outdated golang || brew upgrade golang
-  - brew install opam
+  - brew install opam libev
   - opam init -y
   - go version
 
 install:
   - eval `opam config env`
-  - opam pin add -y qcow-format git://github.com/mirage/ocaml-qcow#master
-  - opam install -y uri qcow-format
+  - opam install -y uri qcow.0.7.0 conf-libev logs fmt qcow-format
   - go get -u github.com/jteeuwen/go-bindata/...
 
 script:
