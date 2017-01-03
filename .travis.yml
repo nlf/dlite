@@ -11,7 +11,7 @@ before_install:
 
 install:
   - eval `opam config env`
-  - opam install -y uri qcow.0.7.0 conf-libev logs fmt qcow-format
+  - opam install -y uri qcow.0.7.0 conf-libev logs fmt
   - go get -u github.com/jteeuwen/go-bindata/...
 
 script:
