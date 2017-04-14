@@ -30,3 +30,12 @@ build the binary
 go generate
 go build
 ```
+
+## Binary
+
+To use the binary, you'll need `homebrew` to install `libev`.
+
+```sh
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install libev
+```
