@@ -1,5 +1,7 @@
 # DLite
 
+THIS PROJECT NEEDS A NEW MAINTAINER - I have stopped using OSX and no longer have time to continue to work on this. Open an issue if you're interested.
+
 this branch represents the latest *beta* version. the stable version can be found in the legacy branch.
 
 ## Building
