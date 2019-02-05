@@ -66,7 +66,7 @@ type VM struct {
 
 func (vm *VM) Start() error {
 	if vm.Process != nil {
-		return fmt.Errorf("Virtual machine is already running")
+		return fmt.Errorf("virtual machine is already running")
 	}
 
 	vm.Process = exec.Command(vm.Bin, vm.Args...)
@@ -101,7 +101,7 @@ func (vm *VM) waitForBoot() error {
 
 	for {
 		if attempts >= 30 {
-			return fmt.Errorf("Timed out waiting for virtual machine")
+			return fmt.Errorf("timed out waiting for virtual machine")
 		}
 
 		time.Sleep(time.Second)
@@ -146,7 +146,7 @@ func (vm *VM) Route() error {
 	routeIfaceMatcher := regexp.MustCompile(`(?m)^\s*interface:\s*(\w+)$`)
 	routeIfaceMatches := routeIfaceMatcher.FindAllStringSubmatch(string(routeBytes), -1)
 	if routeIfaceMatches == nil {
-		return fmt.Errorf("Unable to find interface")
+		return fmt.Errorf("unable to find interface")
 	}
 
 	routeIface := routeIfaceMatches[0][1]
@@ -159,7 +159,7 @@ func (vm *VM) Route() error {
 	memberMatcher := regexp.MustCompile(`(?m)^\s*member:\s*(.*) flags.*$`)
 	memberMatches := memberMatcher.FindAllStringSubmatch(string(memberBytes), -1)
 	if memberMatches == nil {
-		return fmt.Errorf("Unable to find interface members")
+		return fmt.Errorf("unable to find interface members")
 	}
 
 	members := strings.Split(memberMatches[0][1], " ")
@@ -199,7 +199,7 @@ func (vm *VM) dockerSubnet() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Unable to find bridge network")
+	return "", fmt.Errorf("unable to find bridge network")
 }
 
 func (vm *VM) findContainer(name string) (string, error) {
@@ -226,7 +226,7 @@ func (vm *VM) findContainer(name string) (string, error) {
 		return container.NetworkSettings.IPAddress, nil
 	}
 
-	return "", fmt.Errorf("Unable to find container")
+	return "", fmt.Errorf("unable to find container")
 }
 
 func (vm *VM) Stop() error {
@@ -261,7 +261,7 @@ func (vm *VM) IP() (string, error) {
 		attempts := 0
 		for {
 			if attempts >= 15 {
-				value <- result{"", fmt.Errorf("Timed out waiting for IP address")}
+				value <- result{"", fmt.Errorf("timed out waiting for IP address")}
 				break
 			}
 
