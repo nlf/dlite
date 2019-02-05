@@ -16,7 +16,7 @@ func (l *tcpListener) Accept() (net.Conn, error) {
 		l.SetDeadline(time.Now().Add(time.Second))
 		select {
 		case <-l.done:
-			return nil, fmt.Errorf("Server closed")
+			return nil, fmt.Errorf("server closed")
 		default:
 		}
 
@@ -47,7 +47,7 @@ func (s *unixListener) Accept() (net.Conn, error) {
 		s.SetDeadline(time.Now().Add(time.Second))
 		select {
 		case <-s.done:
-			return nil, fmt.Errorf("Server closed")
+			return nil, fmt.Errorf("server closed")
 		default:
 		}
 

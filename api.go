@@ -16,7 +16,7 @@ type API struct {
 func extractUser(r *http.Request) (*User, error) {
 	userHeader, ok := r.Header["X-Username"]
 	if !ok {
-		return nil, fmt.Errorf("Missing X-Username header")
+		return nil, fmt.Errorf("missing X-Username header")
 	}
 
 	return lookupUser(userHeader[0])

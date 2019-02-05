@@ -54,7 +54,7 @@ func ensureNFS(home string) error {
 
 	output, err := exec.Command("nfsd", "checkexports").Output()
 	if err != nil {
-		return fmt.Errorf("There was a problem updating the /etc/exports file, please resolve the issue and run 'sudo nfsd restart'\n%s", string(output))
+		return fmt.Errorf("there was a problem updating the /etc/exports file, please resolve the issue and run 'sudo nfsd restart'\n%s", string(output))
 	}
 
 	output, _ = exec.Command("nfsd", "status").Output()

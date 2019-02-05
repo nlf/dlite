@@ -66,7 +66,7 @@ func (d *Daemon) Shutdown() {
 	d.Proxy.Stop()
 	d.API.Stop()
 	d.DNS.Stop()
-	d.Error <- fmt.Errorf("Shutting down privileged daemon")
+	d.Error <- fmt.Errorf("shutting down privileged daemon")
 }
 
 func (d *Daemon) Wait() []error {
