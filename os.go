@@ -86,6 +86,7 @@ func downloadOS(target string) error {
 		if err != nil {
 			return err
 		}
+		defer output.Close()
 
 		res, err := http.Get(file.Url)
 		defer res.Body.Close()
